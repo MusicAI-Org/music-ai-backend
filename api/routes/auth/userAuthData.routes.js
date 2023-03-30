@@ -26,11 +26,16 @@ router.delete("/deletemodel", (req, res) => {
   userAuthController.userController.authUserController.deleteModel(req, res);
 });
 
+// router.delete("/disablemodel", (req, res) => {
+//   userAuthController.userController.authUserController.disableModel(req, res);
+// });
+
 // ========================== social routes ========================== //
 router.get("/getfriendsdata", (req, res) => {
   userAuthController.userController.authUserController.getFriendsData(req, res);
 });
 
+// NO USE OF THIS END-POINT
 router.get("/getotherusersdata", (req, res) => {
   userAuthController.userController.authUserController.otherUsersData(req, res);
 });

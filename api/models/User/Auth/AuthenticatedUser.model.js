@@ -111,6 +111,12 @@ const AuthenticatedUserSchema = Schema(
         ],
       },
     ],
+    communities: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "MusicCommunityModel",
+      },
+    ],
   },
   { collection: "Users" }
 );

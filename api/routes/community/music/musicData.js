@@ -6,7 +6,7 @@
  const userAuthController = require("../../../controllers/index");
  
  // ========================== fetches from the search engine ========================== //
- router.get("/fetchMusic", (req, res) => {
+ router.get("/", (req, res) => {
    userAuthController.userController.authCommunityController.fetchMLbasedMusic(req, res); // route complete
  });
  

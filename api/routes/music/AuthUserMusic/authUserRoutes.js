@@ -5,7 +5,7 @@
  const router = require("express").Router();
  const userAuthController = require("../../../controllers/index");
  
- // ========================== basic user routes without auth ========================== //
+ // ========================== route to send the music for home page ========================== //
  router.get("/getAuthMusic", (req, res) => {
    userAuthController.userController.authMusicController.getAuthMusic(req, res); // route complete
  });

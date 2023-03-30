@@ -5,6 +5,7 @@ const basicMusicController = require("./Music/basicMusicController");
 const authMusicController = require("./Music/authMusicController");
 
 const authCommunityController = require("./Community/authCommunityController");
+const authCommunityFeatures = require("./Community/authCommunityFeatures");
 
 module.exports = {
   // auth controllers
@@ -15,4 +16,5 @@ module.exports = {
   authMusicController,
   // community controller
   authCommunityController,
+  authCommunityFeatures
 };

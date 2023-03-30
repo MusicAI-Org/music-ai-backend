@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const GroupChatSchema = new Schema({
+const CommunityChatSchema = new Schema({
   group: {
     type: Schema.Types.ObjectId,
-    ref: "Group",
+    ref: "MusicCommunityModel",
   },
   fromUser: {
     type: Schema.Types.ObjectId,
@@ -16,6 +16,6 @@ const GroupChatSchema = new Schema({
   },
 });
 
-const GroupChatModel = mongoose.model("GroupChat", GroupChatSchema);
+const CommunityChatModel = mongoose.model("CommunityChat", CommunityChatSchema);
 
-module.exports = GroupChatModel;
+module.exports = CommunityChatModel;

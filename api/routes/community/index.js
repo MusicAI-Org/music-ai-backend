@@ -1,6 +1,7 @@
 // import the user.routes.js routes here
 const router = require("express").Router();
 
+const authFeatureRouter = require("./authFeature");
 const authFriendRouter = require("./authFriends");
 const authMusicRouter = require("./music/authMusicRoutes");
 const authSearchEngine = require("./authSearchEngine");
@@ -9,6 +10,7 @@ const jwtCheck = require("../../middlewares/AuthMiddleware");
 
 // jwt-pipeline for auth routes
 // jwtcheck here
+router.use("/features", authFeatureRouter);
 router.use("/friends", authFriendRouter); // route complete
 router.use("/music", authMusicRouter); // route complete
 router.use("/search", authSearchEngine);
