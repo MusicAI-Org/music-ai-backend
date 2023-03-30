@@ -1,5 +1,4 @@
 const { mongoose, Schema, model } = require("mongoose");
-const { Schema } = mongoose;
 
 // Define community schema
 const MusicCommunitySchema = new Schema(
