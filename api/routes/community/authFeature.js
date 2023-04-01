@@ -53,4 +53,12 @@ router.get("/data/:id", (req, res) => {
   );
 });
 
+router.get("/data-user/:_id", (req, res) => {
+  userAuthController.userController.authCommunityFeatures.fetchAllCommunitiesOfUser(
+    // route complete
+    req,
+    res
+  );
+});
+
 module.exports = router;

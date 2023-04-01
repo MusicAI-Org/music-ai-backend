@@ -241,6 +241,21 @@ const fetchCommunityDataByID = async (req, res) => {
   }
 };
 
+// ========================================== fetch all the communities of a particular user ==========================================
+const fetchAllCommunitiesOfUser = async (req, res) => {
+  try {
+    const { _id } = req.params;
+    const user = await AuthenticatedUserModel.findById({ _id });
+    const communities = await MusicCommunityModel.find({
+      _id: { $in: user.communities },
+    }).populate("name description createdBy members");
+    return res.status(200).json({ communities });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Failed to fetch community data." });
+  }
+};
+
 module.exports = {
   createCommunity,
   fetchAllCommunityData,
@@ -248,4 +263,5 @@ module.exports = {
   leaveCommunity,
   deleteCommunity,
   fetchCommunityDataByID,
+  fetchAllCommunitiesOfUser,
 };
