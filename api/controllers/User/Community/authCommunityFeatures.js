@@ -24,25 +24,25 @@ const createCommunity = async (req, res) => {
 
     // Check if imgUrl exists
     let imageUrl;
-    if (url) {
-      imageUrl = url;
-    } else {
-      const inputValue =
-        "an-astronaut-riding-a-horse-on-mars-artstation-hd-dramatic-lighting-detailed";
-      const response = await axios.get(
-        `https://music-ai-stable-diffusion-api.onrender.com/generate-image/${inputValue}`
-      );
-      
-      image = response.data.image;
-      imageUrl = image;
-      const result = await cloudinary.uploader.upload(image, {
-        public_id: `${user._id}_${name}`,
-        width: 500,
-        height: 500,
-        crop: "fill",
-      });
-      imageUrl = result.url;
-    }
+    // if (url) {
+    imageUrl = url;
+    // } else {
+    //   const inputValue =
+    //     "an-astronaut-riding-a-horse-on-mars-artstation-hd-dramatic-lighting-detailed";
+    //   const response = await axios.get(
+    //     `https://music-ai-stable-diffusion-api.onrender.com/generate-image/${inputValue}`
+    //   );
+
+    //   image = response.data.image;
+    //   imageUrl = image;
+    //   const result = await cloudinary.uploader.upload(image, {
+    //     public_id: `${user._id}_${name}`,
+    //     width: 500,
+    //     height: 500,
+    //     crop: "fill",
+    //   });
+    //   imageUrl = result.url;
+    // }
 
     // Create new community
     const newCommunity = new MusicCommunityModel({
