@@ -116,12 +116,18 @@ module.exports = function (io) {
       if (liveStream) {
         // Use cached LiveStream data
         io.to(socket.id).emit("livestreamData", JSON.parse(liveStream));
+
+        // Join the room
+        socket.join(roomId);
       } else {
         // Look up LiveStream data in database
         const dbLiveStream = await LiveStream.findOne({ roomId });
         if (dbLiveStream) {
           // Use LiveStream data from database
           io.to(socket.id).emit("livestreamData", dbLiveStream);
+
+          // Join the room
+          socket.join(roomId);
 
           // Cache LiveStream data in Redis for future requests
           redisClient.set(`livestream:${roomId}`, JSON.stringify(dbLiveStream));
@@ -181,13 +187,13 @@ module.exports = function (io) {
       });
 
       // Handle ICE candidates
-      // When a WebRTC connection is established, the two devices need to exchange network information to find the best way to 
-      // communicate directly with each other. This involves gathering ICE candidates, which are a list of potential network addresses 
-      // that can be used to connect to the other device. The ICE framework uses these candidates to determine the optimal path for 
+      // When a WebRTC connection is established, the two devices need to exchange network information to find the best way to
+      // communicate directly with each other. This involves gathering ICE candidates, which are a list of potential network addresses
+      // that can be used to connect to the other device. The ICE framework uses these candidates to determine the optimal path for
       // real-time media to be transmitted between the two devices.
-      // Each device generates its own list of ICE candidates, which includes all of the IP addresses and ports it can use to communicate 
-      // over the internet, as well as other network-related information. Once both devices have generated their lists, they begin 
-      // exchanging them with each other until they find a mutual candidate that can be used for communication. This process is called ICE 
+      // Each device generates its own list of ICE candidates, which includes all of the IP addresses and ports it can use to communicate
+      // over the internet, as well as other network-related information. Once both devices have generated their lists, they begin
+      // exchanging them with each other until they find a mutual candidate that can be used for communication. This process is called ICE
       // negotiation.
       socket.on("iceCandidate", (candidate, roomId, sender) => {
         socket.to(roomId).broadcast.emit("iceCandidate", candidate, sender);

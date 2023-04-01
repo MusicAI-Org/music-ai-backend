@@ -5,6 +5,7 @@ const cors = require("cors");
 const http = require("http");
 const express = require("express");
 const router = require("./api/routes");
+const bodyParser = require("body-parser");
 const socketConnections = require("./api/socketio");
 const webrtcConnections = require("./api/webRTC");
 const connectDB = require("./api/config/connectDB");
@@ -17,6 +18,7 @@ const server = http.createServer(app);
 
 // middlewares
 app.use(cors());
+app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 connectDB();

@@ -3,6 +3,10 @@ const { mongoose, Schema, model } = require("mongoose");
 // Define community schema
 const MusicCommunitySchema = new Schema(
   {
+    _id: {
+      type: Schema.Types.ObjectId,
+      default: new mongoose.Types.ObjectId()
+    },
     name: {
       type: String,
       required: true,

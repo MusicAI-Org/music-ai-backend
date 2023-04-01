@@ -6,14 +6,14 @@ const OneToOneChatModel = require("../models/ChattingModels/OneToOneChatModel");
 const GroupModel = require("../models/Community/Community.model");
 const GroupChatModel = require("../models/Community/CommunityChat.model");
 const { default: mongoose } = require("mongoose");
-const redis = require("redis");
-const { promisify } = require("util");
+// const redis = require("redis");
+// const { promisify } = require("util");
 
-const redisClient = redis.createClient();
+// const redisClient = redis.createClient();
 
-const lpushAsync = promisify(redisClient.lPush).bind(redisClient);
-const lrangeAsync = promisify(redisClient.lRange).bind(redisClient);
-const expireAsync = promisify(redisClient.expire).bind(redisClient);
+// const lpushAsync = promisify(redisClient.lPush).bind(redisClient);
+// const lrangeAsync = promisify(redisClient.lRange).bind(redisClient);
+// const expireAsync = promisify(redisClient.expire).bind(redisClient);
 
 module.exports = function (io) {
   console.log("Sockets connected");
@@ -43,8 +43,8 @@ module.exports = function (io) {
     io.emit(`comment:${musicId}`, newComment.toJSON());
 
     // Store the comment in the user's Redis list
-    await lpushAsync(`user:${userId}:messages`, JSON.stringify(newComment));
-    await expireAsync(`user:${userId}:messages`, 86400); // Set expiration time to 24 hours
+    // await lpushAsync(`user:${userId}:messages`, JSON.stringify(newComment));
+    // await expireAsync(`user:${userId}:messages`, 86400); // Set expiration time to 24 hours
   }
 
   // ************************************************ add one to one chat feature  ************************************************ //
@@ -68,25 +68,25 @@ module.exports = function (io) {
     await newOneToOneChat.save();
 
     // Store the message in Redis for both sender and receiver
-    const messageString = JSON.stringify(newOneToOneChat);
-    await lpushAsync(`user:${fromUser}:messages:${toUser}`, messageString);
-    await lpushAsync(`user:${toUser}:messages:${fromUser}`, messageString);
+    // const messageString = JSON.stringify(newOneToOneChat);
+    // await lpushAsync(`user:${fromUser}:messages:${toUser}`, messageString);
+    // await lpushAsync(`user:${toUser}:messages:${fromUser}`, messageString);
 
-    // Set expiration time to 24 hours
-    await expireAsync(`user:${fromUser}:messages:${toUser}`, 86400);
-    await expireAsync(`user:${toUser}:messages:${fromUser}`, 86400);
+    // // Set expiration time to 24 hours
+    // await expireAsync(`user:${fromUser}:messages:${toUser}`, 86400);
+    // await expireAsync(`user:${toUser}:messages:${fromUser}`, 86400);
 
-    // Retrieve messages from Redis cache
-    const fromUserMessages = await lrangeAsync(
-      `user:${fromUser}:messages:${toUser}`,
-      0,
-      -1
-    );
-    const toUserMessages = await lrangeAsync(
-      `user:${toUser}:messages:${fromUser}`,
-      0,
-      -1
-    );
+    // // Retrieve messages from Redis cache
+    // const fromUserMessages = await lrangeAsync(
+    //   `user:${fromUser}:messages:${toUser}`,
+    //   0,
+    //   -1
+    // );
+    // const toUserMessages = await lrangeAsync(
+    //   `user:${toUser}:messages:${fromUser}`,
+    //   0,
+    //   -1
+    // );
 
     io.emit(`oneToOneChat:${fromUser}:${toUser}`, {
       newOneToOneChat: newOneToOneChat.toJSON(),
@@ -104,7 +104,7 @@ module.exports = function (io) {
 
     // Find the group by name
     const group = await GroupModel.findOne({ name: groupName }).populate(
-      "users"
+      "members"
     );
 
     if (!group) {
@@ -112,7 +112,7 @@ module.exports = function (io) {
     }
 
     // Check if the user is a member of the group
-    const isMember = group.users.some(
+    const isMember = group.members.some(
       (user) => user._id.toString() === fromUser
     );
     if (!isMember) {
@@ -131,14 +131,14 @@ module.exports = function (io) {
     io.emit(`groupChat:${group._id}`, newGroupChat.toJSON());
 
     // Store the message in Redis for each user in the group
-    const userIds = await lrangeAsync(`group:${groupName}:users`, 0, -1);
-    const messageString = JSON.stringify(newGroupChat);
-    await Promise.all(
-      userIds.map(async (userId) => {
-        await lpushAsync(`user:${userId}:messages`, messageString);
-        await expireAsync(`user:${userId}:messages`, 86400); // Set expiration time to 24 hours
-      })
-    );
+    // const userIds = await lrangeAsync(`group:${groupName}:users`, 0, -1);
+    // const messageString = JSON.stringify(newGroupChat);
+    // await Promise.all(
+    //   userIds.map(async (userId) => {
+    //     await lpushAsync(`user:${userId}:messages`, messageString);
+    //     await expireAsync(`user:${userId}:messages`, 86400); // Set expiration time to 24 hours
+    //   })
+    // );
   }
 
   // socket io events

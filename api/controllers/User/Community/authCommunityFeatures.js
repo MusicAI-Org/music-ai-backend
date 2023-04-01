@@ -10,7 +10,7 @@ require("dotenv").config();
 // ========================================== create communities ==========================================
 const createCommunity = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, user } = req.body;
 
     // Validate input
     if (!name || !description) {
@@ -21,13 +21,23 @@ const createCommunity = async (req, res) => {
 
     // Create new community
     const newCommunity = new MusicCommunityModel({
+      _id: new mongoose.Types.ObjectId(), // Add ID
       name,
       description,
-      members: [req.user._id], // Add current user as a member
+      members: [user._id], // Add current user as a member
+      createdBy: user._id, // Add current user as the creator
+      chat: [], // Set chat to empty array
     });
 
     // Save new community to database
     await newCommunity.save();
+
+    // Add the created community to the AuthenticatedUserModel's communities array
+    await AuthenticatedUserModel.findByIdAndUpdate(
+      user._id,
+      { $push: { communities: newCommunity._id } },
+      { new: true }
+    );
 
     // Send response with created community data
     res
@@ -42,7 +52,9 @@ const createCommunity = async (req, res) => {
 // ========================================== fetch all data of the communities ==========================================
 const fetchAllCommunityData = async (req, res) => {
   try {
-    const communities = await MusicCommunityModel.find().populate("members");
+    const communities = await MusicCommunityModel.find().populate(
+      "name description createdBy members"
+    );
     return res.status(200).json({ communities });
   } catch (error) {
     console.error(error);
@@ -53,8 +65,8 @@ const fetchAllCommunityData = async (req, res) => {
 // ========================================== join a particular community ==========================================
 const joinCommunity = async (req, res) => {
   try {
-    const userId = req.user._id; // authenticated user ID
-    const { communityId } = req.body; // community ID to join
+    const { communityId, user } = req.body; // community ID to join
+    const userId = user._id; // authenticated user ID
 
     // Check if the community ID is valid
     const community = await MusicCommunityModel.findById(communityId);
@@ -74,13 +86,13 @@ const joinCommunity = async (req, res) => {
     await community.save();
 
     // Add the community to the user's list of joined communities
-    const user = await AuthenticatedUserModel.findByIdAndUpdate(
+    const authuser = await AuthenticatedUserModel.findByIdAndUpdate(
       userId,
       { $addToSet: { communities: communityId } },
       { new: true }
     );
 
-    return res.json({ message: "Joined the community successfully", user });
+    return res.json({ message: "Joined the community successfully", authuser });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -90,8 +102,7 @@ const joinCommunity = async (req, res) => {
 // ========================================== leave a particular community ==========================================
 const leaveCommunity = async (req, res) => {
   try {
-    const { communityId } = req.params;
-    const { userId } = req.user;
+    const { communityId, user } = req.body;
 
     const community = await MusicCommunityModel.findById(communityId);
     if (!community) {
@@ -99,7 +110,7 @@ const leaveCommunity = async (req, res) => {
     }
 
     const memberIndex = community.members.findIndex(
-      (member) => member.toString() === userId
+      (member) => member.toString() === user._id
     );
     if (memberIndex === -1) {
       return res
@@ -109,6 +120,23 @@ const leaveCommunity = async (req, res) => {
 
     community.members.splice(memberIndex, 1);
     await community.save();
+
+    const userToUpdate = await AuthenticatedUserModel.findById(user._id);
+    if (!userToUpdate) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const communityIndex = userToUpdate.communities.findIndex(
+      (c) => c.toString() === communityId
+    );
+    if (communityIndex === -1) {
+      return res
+        .status(400)
+        .json({ message: "User is not a member of this community" });
+    }
+
+    userToUpdate.communities.splice(communityIndex, 1);
+    await userToUpdate.save();
 
     return res.status(200).json({ message: "Successfully left the community" });
   } catch (error) {
@@ -120,10 +148,9 @@ const leaveCommunity = async (req, res) => {
 // ========================================== delete a particular community ==========================================
 const deleteCommunity = async (req, res) => {
   try {
-    const communityId = req.params.communityId;
-    const authenticatedUserId = req.user.id;
-    const userToTransferOwnershipToId =
-      req.body.user_to_transfer_ownership_to_id;
+    const { communityId, user, user_to_transfer_ownership_id } = req.body;
+    const authenticatedUserId = user._id;
+    const userToTransferOwnershipToId = user_to_transfer_ownership_id;
 
     // Check if the user is the createdBy of the community
     const community = await MusicCommunityModel.findById(communityId);
@@ -136,22 +163,35 @@ const deleteCommunity = async (req, res) => {
         .json({ message: "Only the owner can delete the community" });
     }
 
+    // no members in the community and ownership is empty string
+    if (userToTransferOwnershipToId == "" && community.members.length == 0) {
+      // Delete the community directly if there are no members
+      await MusicCommunityModel.findByIdAndDelete({ _id: communityId });
+      return res
+        .status(200)
+        .json({ message: "Community deleted successfully" });
+    }
+
     // Transfer ownership to another user if specified
-    if (userToTransferOwnershipToId) {
+    if (userToTransferOwnershipToId && community.members.length > 0) {
       const userToTransferOwnershipTo = await AuthenticatedUserModel.findById(
         userToTransferOwnershipToId
       );
       if (!userToTransferOwnershipTo) {
         return res.status(404).json({ message: "User not found" });
       }
-      community.owner = userToTransferOwnershipToId;
+      community.createdBy = userToTransferOwnershipToId;
+      community.members = community.members.filter(
+        (member) => member.toString() !== authenticatedUserId.toString()
+      );
       await community.save();
+      return res.status(200).json({
+        message: `Transferred Ownership to ${userToTransferOwnershipToId}`,
+      });
     }
 
-    // Delete the community
-    await MusicCommunityModel.findByIdAndDelete(communityId);
-
-    res.status(200).json({ message: "Community deleted successfully" });
+    // cannot delete community
+    return res.status(400).json({ message: "Cannot delete community" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -161,8 +201,8 @@ const deleteCommunity = async (req, res) => {
 // ========================================== fetch community data by ID ==========================================
 const fetchCommunityDataByID = async (req, res) => {
   try {
-    const { communityId } = req.params;
-    const community = await MusicCommunityModel.findById(communityId)
+    const { id } = req.params;
+    const community = await MusicCommunityModel.findById(id)
       .populate("members", "-password")
       .populate("createdBy", "-password");
     if (!community) {

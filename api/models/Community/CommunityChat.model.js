@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const CommunityChatSchema = new Schema({
+  _id: {
+    type: Schema.Types.ObjectId,
+    default: new mongoose.Types.ObjectId()
+  },
   group: {
     type: Schema.Types.ObjectId,
     ref: "MusicCommunityModel",

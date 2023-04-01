@@ -5,7 +5,7 @@
 const router = require("express").Router();
 const userAuthController = require("../../controllers/index");
 
-router.get("/create", (req, res) => {
+router.post("/create", (req, res) => {
   userAuthController.userController.authCommunityFeatures.createCommunity(
     // route complete
     req,
@@ -21,7 +21,7 @@ router.get("/data", (req, res) => {
   );
 });
 
-router.get("/join", (req, res) => {
+router.post("/join", (req, res) => {
   userAuthController.userController.authCommunityFeatures.joinCommunity(
     // route complete
     req,
@@ -29,7 +29,7 @@ router.get("/join", (req, res) => {
   );
 });
 
-router.get("/leave", (req, res) => {
+router.post("/leave", (req, res) => {
   userAuthController.userController.authCommunityFeatures.leaveCommunity(
     // route complete
     req,
@@ -37,7 +37,7 @@ router.get("/leave", (req, res) => {
   );
 });
 
-router.get("/delete", (req, res) => {
+router.post("/delete", (req, res) => {
   userAuthController.userController.authCommunityFeatures.deleteCommunity(
     // route complete
     req,
