@@ -1,6 +1,8 @@
+const axios = require("axios");
 const mongoose = require("mongoose");
 const MusicCommunityModel = require("../../../models/Community/Community.model");
 const AuthenticatedUserModel = require("../../../models/User/Auth/AuthenticatedUser.model");
+const cloudinary = require("../../../config/cloudinaryConfig");
 
 // and the user id
 // @params: id
@@ -8,15 +10,38 @@ const AuthenticatedUserModel = require("../../../models/User/Auth/AuthenticatedU
 require("dotenv").config();
 
 // ========================================== create communities ==========================================
+
 const createCommunity = async (req, res) => {
   try {
-    const { name, description, user } = req.body;
+    const { name, description, user, url } = req.body;
 
     // Validate input
     if (!name || !description) {
       return res
         .status(400)
         .json({ message: "Name and description are required" });
+    }
+
+    // Check if imgUrl exists
+    let imageUrl;
+    if (url) {
+      imageUrl = url;
+    } else {
+      const inputValue =
+        "an-astronaut-riding-a-horse-on-mars-artstation-hd-dramatic-lighting-detailed";
+      const response = await axios.get(
+        `https://music-ai-stable-diffusion-api.onrender.com/generate-image/${inputValue}`
+      );
+      
+      image = response.data.image;
+      imageUrl = image;
+      const result = await cloudinary.uploader.upload(image, {
+        public_id: `${user._id}_${name}`,
+        width: 500,
+        height: 500,
+        crop: "fill",
+      });
+      imageUrl = result.url;
     }
 
     // Create new community
@@ -27,6 +52,7 @@ const createCommunity = async (req, res) => {
       members: [user._id], // Add current user as a member
       createdBy: user._id, // Add current user as the creator
       chat: [], // Set chat to empty array
+      imgUrl: imageUrl,
     });
 
     // Save new community to database

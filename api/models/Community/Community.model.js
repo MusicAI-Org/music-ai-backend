@@ -5,7 +5,7 @@ const MusicCommunitySchema = new Schema(
   {
     _id: {
       type: Schema.Types.ObjectId,
-      default: new mongoose.Types.ObjectId()
+      default: new mongoose.Types.ObjectId(),
     },
     name: {
       type: String,
@@ -42,6 +42,10 @@ const MusicCommunitySchema = new Schema(
         },
       },
     ],
+    imgUrl: {
+      type: String,
+      required: true,
+    },
   },
   { collection: "MusicCommunities" }
 );
