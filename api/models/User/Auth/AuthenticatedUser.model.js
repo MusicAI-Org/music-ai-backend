@@ -37,7 +37,7 @@ const AuthenticatedUserSchema = Schema(
     phoneNumber: {
       type: String,
       maxlength: 13,
-      minlength: 13,
+      minlength: 10,
     },
     creditsForGraph: [
       {
