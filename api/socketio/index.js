@@ -166,6 +166,35 @@ module.exports = function (io) {
       const { groupName, fromUser, message } = data;
       await addGroupChat(groupName, fromUser, message, io);
     });
+
+    // ================================== community sockets ===================================== //
+    // create community
+    socket.on("createCommunity", async function (data) {
+      console.log("createCommunity", data);
+      const { groupName, fromUser, message } = data;
+      await addGroupChat(groupName, fromUser, message, io);
+    });
+
+    // join community
+    socket.on("joinCommunity", async function (data) {
+      console.log("joinCommunity", data);
+      const { groupName, fromUser, message } = data;
+      await addGroupChat(groupName, fromUser, message, io);
+    });
+
+    // leave community
+    socket.on("leaveCommunity", async function (data) {
+      console.log("leaveCommunity", data);
+      const { groupName, fromUser, message } = data;
+      await addGroupChat(groupName, fromUser, message, io);
+    });
+
+    // delete community
+    socket.on("deleteCommunity", async function (data) {
+      console.log("deleteCommunity", data);
+      const { groupName, fromUser, message } = data;
+      await addGroupChat(groupName, fromUser, message, io);
+    });
   });
 
   return router;

@@ -2,6 +2,7 @@
 // and the user id
 // @params: id
 // @return: user data
+const mongoose = require("mongoose");
 const MongoClient = require("mongodb").MongoClient;
 const AuthenticatedUserModel = require("../../../models/User/Auth/AuthenticatedUser.model.js");
 
@@ -13,6 +14,7 @@ const initializeModel = async (req, res) => {
     email,
     name,
     role,
+    password,
     dateOfBirth,
     avatarName,
     genre,
@@ -21,37 +23,26 @@ const initializeModel = async (req, res) => {
     address,
     location,
   } = req.body;
-  const url = process.env.MONGO_URI;
-  const dbName = process.env.DB_NAME;
 
-  const client = new MongoClient(url, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
   try {
-    await client.connect();
-    const db = client.db(dbName);
-    const col = db.collection("basicusers");
-    const docs = await col.find({ email: email }).toArray();
-    // creating the authenticateduser model here
-    if (!docs[0]) {
-      res.json({
-        success: false,
-        err: "Please login to google to create the model",
-      });
+    // check if the user is already present in the database
+    const existingUser = await AuthenticatedUserModel.findOne({ email });
+    if (existingUser) {
+      return res.json({ success: false, message: "User already exists" });
     }
+
     const user = new AuthenticatedUserModel({
-      _id: docs[0]._id,
-      name: name,
-      role: role,
+      _id: mongoose.Types.ObjectId(),
+      name,
+      role,
       yearOfJoining: new Date().getFullYear(),
-      dateOfBirth: dateOfBirth,
-      avatarName: avatarName,
-      email: docs[0].email,
-      password: docs[0].password,
-      genre: genre,
-      avatarImg: avatarImg,
-      phoneNumber: phoneNumber,
+      dateOfBirth,
+      avatarName,
+      email,
+      password,
+      genre,
+      avatarImg,
+      phoneNumber,
       creditsForGraph: [],
       creditsForGraphUpdatedAt: Date.now(),
       music: [],
@@ -62,7 +53,7 @@ const initializeModel = async (req, res) => {
       friends: [],
       friendRequests: [],
       address,
-      location: location,
+      location,
     });
 
     // delete password from the user
