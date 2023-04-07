@@ -14,7 +14,7 @@ router.post("/createmodel", (req, res) => {
   );
 });
 
-router.get("/getUser", (req, res) => {
+router.post("/getModel", (req, res) => {
   userAuthController.userController.authUserController.fetchUser(req, res);
 });
 
@@ -31,7 +31,7 @@ router.delete("/deletemodel", (req, res) => {
 // });
 
 // ========================== social routes ========================== //
-router.get("/getfriendsdata", (req, res) => {
+router.get("/getfriendsdata/:id", (req, res) => {
   userAuthController.userController.authUserController.getFriendsData(req, res);
 });
 

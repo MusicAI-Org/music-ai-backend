@@ -212,35 +212,40 @@ const deleteModel = async (req, res) => {
 
 // fetching the users that are followers of the users and also the users to which the user follow
 const getFriendsData = async (req, res) => {
-  const { _id } = req.body;
-  // find the users that are friends of the users
-  const friends = AuthenticatedUserModel.find(
-    { _id: { $ne: _id }, friends: { $eq: _id } },
-    {
-      _id: 1,
-      name: 1,
-      avatarName: 1,
-      avatarImg: 1,
-      role: 1,
-      dateOfBirth: 1,
-      yearOfJoining: 1,
-      address: 1,
-      music: 1,
-      statsData: 1,
-    }
-  );
-
+  const { id } = req.params;
+  console.log(id);
+  
   try {
+    // find the users that are friends of the users and use lean() to convert to plain JS object
+    const friends = await AuthenticatedUserModel.find(
+      { _id: { $ne: id }, friends: { $eq: id } },
+      {
+        _id: 1,
+        name: 1,
+        avatarName: 1,
+        avatarImg: 1,
+        role: 1,
+        dateOfBirth: 1,
+        yearOfJoining: 1,
+        address: 1,
+        music: 1,
+        statsData: 1,
+      }
+    ).lean();
+    
     if (!friends) {
-      res.json({ success: false, message: "No user found" });
+      return res.json({ success: false, message: "No user found" });
     }
-    res.json({ success: true, friends });
+    
+    return res.json({ success: true, friends });
   } catch (err) {
-    res
+    console.log(err);
+    return res
       .status(500)
       .json({ success: false, message: "server error, try after some time" });
   }
 };
+
 
 const otherUsersData = async (req, res) => {
   const { _id } = req.body;

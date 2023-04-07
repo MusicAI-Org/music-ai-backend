@@ -28,6 +28,7 @@
     "googleapis": "^111.0.0",
     "gridfs-stream": "^1.1.1",
     "http": "^0.0.1-security",
+    "json-stringify-safe": "^5.0.1",
     "jwks-rsa": "^3.0.1",
     "mongodb": "^5.0.0",
     "mongoose": "^6.9.0",

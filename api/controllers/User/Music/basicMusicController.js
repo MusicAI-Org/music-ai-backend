@@ -21,6 +21,7 @@ const getBasicMusicData = async (req, res) => {
     const mostPopular = youtube.videos.list({
       part: "snippet,statistics",
       chart: "mostPopular",
+      q:`Most Popular Music`,
       maxResults: 20,
     });
     // Fetch top tracks
