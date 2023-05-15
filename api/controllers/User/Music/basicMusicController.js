@@ -40,19 +40,19 @@ const getBasicMusicData = async (req, res) => {
       const topTracks = youtube.search.list({
         part: "snippet",
         type: "video",
-        q: `Top tracks ${currentYear}`,
+        q: `Top music tracks ${currentYear}`,
         maxResults: 20,
       });
       const topArtists = youtube.search.list({
         part: "snippet",
         type: "channel",
-        q: `Top artists ${currentYear}`,
+        q: `Top music artists ${currentYear}`,
         maxResults: 20,
       });
       const topAlbums = youtube.search.list({
         part: "snippet",
         type: "album",
-        q: `Top albums ${currentYear}`,
+        q: `Top music albums ${currentYear}`,
         maxResults: 20,
       });
 
@@ -88,19 +88,19 @@ const getBasicMusicData = async (req, res) => {
         const topTracks = youtube.search.list({
           part: "snippet",
           type: "video",
-          q: `Top tracks ${currentYear}`,
+          q: `Top music tracks ${currentYear}`,
           maxResults: 20,
         });
         const topArtists = youtube.search.list({
           part: "snippet",
           type: "channel",
-          q: `Top artists ${currentYear}`,
+          q: `Top music artists ${currentYear}`,
           maxResults: 20,
         });
         const topAlbums = youtube.search.list({
           part: "snippet",
           type: "album",
-          q: `Top albums ${currentYear}`,
+          q: `Top music albums ${currentYear}`,
           maxResults: 20,
         });
 

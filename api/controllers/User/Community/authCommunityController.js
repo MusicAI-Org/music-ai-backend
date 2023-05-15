@@ -17,7 +17,7 @@ const addFriend = async (req, res) => {
 
     // Check if user1 and user2 are already friends
     if (user1.friends.includes(user2._id)) {
-      res.send("Users are already friends");
+      res.status(200).json({msg: "Users are already friends"});
       return;
     }
 
@@ -84,15 +84,15 @@ const addFriend = async (req, res) => {
         );
 
         await Promise.all([user1.save(), user2.save()]);
-        res.send("Friend added successfully");
+        res.status(200).json({msg: "Friend added successfully"});
       } else {
-        res.send("Friend request already sent");
+        res.status(200).json({msg: "Friend request already sent"});
       }
     } else {
       // Add a new friend request from user1 to user2
       user2.friendRequests.push({ fromUser: user1._id, status: "pending" });
       await user2.save();
-      res.send("Friend request sent successfully");
+      res.status(200).json({msg: "Friend request sent successfully"});
     }
   } catch (error) {
     console.error(error);

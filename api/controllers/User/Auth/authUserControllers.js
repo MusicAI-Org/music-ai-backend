@@ -58,7 +58,7 @@ const initializeModel = async (req, res) => {
 
     // delete password from the user
     delete user.password;
-    await user.save();
+    await user.save(); // stored user in database
     res.json({ success: true, user });
   } catch (err) {
     console.log(err.stack);
