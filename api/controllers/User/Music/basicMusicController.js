@@ -138,7 +138,7 @@ const getBasicMusicData = async (req, res) => {
 const getOtherUserData = async (req, res) => {
   try {
     // fetch all users from the database
-    const users = await AuthenticatedUserModel.find({}).select("name location");
+    const users = await AuthenticatedUserModel.find({}).select("_id name avatarImg address location");
 
     // send the data to the front end
     res.status(200).json(users);

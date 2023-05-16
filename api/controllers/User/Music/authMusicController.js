@@ -74,19 +74,23 @@ const getAuthGlobeData = async (req, res) => {
   try {
     // fetch all users from the database that are not friends
     // and are not the current user
+    // const usersNotFriends = await AuthenticatedUserModel.find({
+    //   _id: req.body._id,
+    // })
+    //   .select("_id name avatarImg address location")
+    //   .exec();
     const usersNotFriends = await AuthenticatedUserModel.find({
-      _id: { $ne: req.user._id },
-      friends: { $ne: req.user._id },
+      _id: { $ne: req.body._id },
     })
-      .select("name location")
+      .select("_id name avatarImg address location")
       .exec();
 
     // users that are friends
     const usersFriends = await AuthenticatedUserModel.find({
-      _id: { $ne: req.user._id },
-      friends: { $eq: req.user._id },
+      _id: { $ne: req.body._id },
+      friends: { $eq: req.body._id },
     })
-      .select("name location")
+      .select("_id name avatarImg address location")
       .exec();
 
     // send the data to frontend

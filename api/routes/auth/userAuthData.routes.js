@@ -36,7 +36,7 @@ router.get("/getfriendsdata/:id", (req, res) => {
 });
 
 // NO USE OF THIS END-POINT
-router.get("/getotherusersdata", (req, res) => {
+router.post("/getotherusersdata", (req, res) => {
   userAuthController.userController.authUserController.otherUsersData(req, res);
 });
 

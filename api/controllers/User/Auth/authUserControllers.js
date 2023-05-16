@@ -214,7 +214,7 @@ const deleteModel = async (req, res) => {
 const getFriendsData = async (req, res) => {
   const { id } = req.params;
   console.log(id);
-  
+
   try {
     // find the users that are friends of the users and use lean() to convert to plain JS object
     const friends = await AuthenticatedUserModel.find(
@@ -230,13 +230,14 @@ const getFriendsData = async (req, res) => {
         address: 1,
         music: 1,
         statsData: 1,
+        location: 1,
       }
     ).lean();
-    
+
     if (!friends) {
       return res.json({ success: false, message: "No user found" });
     }
-    
+
     return res.json({ success: true, friends });
   } catch (err) {
     console.log(err);
@@ -246,11 +247,10 @@ const getFriendsData = async (req, res) => {
   }
 };
 
-
 const otherUsersData = async (req, res) => {
-  const { _id } = req.body;
+  const { _id } = req.body._id;
   const usersNotFriends = AuthenticatedUserModel.find(
-    { _id: { $ne: _id }, friends: { $ne: _id } },
+    { _id: { $ne: req.body._id }, friends: { $ne: req.body._id } },
     {
       _id: 1,
       name: 1,
@@ -270,9 +270,9 @@ const otherUsersData = async (req, res) => {
 
   try {
     if (!usersNotFriends) {
-      res.json({ success: false, message: "No user found" });
+      return res.json({ success: false, message: "No user found" });
     }
-    res.json({ success: true, usersNotFriends });
+    return res.json({ success: true, usersNotFriends });
   } catch (err) {
     res
       .status(500)

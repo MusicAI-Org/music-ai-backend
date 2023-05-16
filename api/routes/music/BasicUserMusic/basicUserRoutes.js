@@ -11,7 +11,7 @@ router.get("/getBasicMusic", (req, res) => {
 });
 
 // ========================== globedata to fetch all the users in db and display on the map ========================== //
-router.get("/allGlobeData", (req, res) => {
+router.post("/allGlobeData", (req, res) => {
     basicUserController.userController.basicMusicController.getOtherUserData(req, res);
 });
 

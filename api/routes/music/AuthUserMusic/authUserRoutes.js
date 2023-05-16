@@ -11,7 +11,7 @@
  });
  
  // ========================== globedata to fetch all the users in db and display on the map ========================== //
- router.get("/globeAuthData", (req, res) => { // route complete
+ router.post("/globeAuthData", (req, res) => { // route complete
    userAuthController.userController.authMusicController.getAuthGlobeData(req, res); // route complete
  });
  
