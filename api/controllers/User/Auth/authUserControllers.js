@@ -135,6 +135,8 @@ const fetchUser = async (req, res) => {
       })
       .exec();
 
+      // console.log(fullUserPopulatedDetails)
+
     if (!fullUserPopulatedDetails) {
       res.json({ success: false, err: "No user found" });
     }
@@ -213,7 +215,7 @@ const deleteModel = async (req, res) => {
 // fetching the users that are followers of the users and also the users to which the user follow
 const getFriendsData = async (req, res) => {
   const { id } = req.params;
-  console.log(id);
+  // console.log(id);
 
   try {
     // find the users that are friends of the users and use lean() to convert to plain JS object
@@ -242,39 +244,6 @@ const getFriendsData = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res
-      .status(500)
-      .json({ success: false, message: "server error, try after some time" });
-  }
-};
-
-const otherUsersData = async (req, res) => {
-  const { _id } = req.body._id;
-  const usersNotFriends = AuthenticatedUserModel.find(
-    { _id: { $ne: req.body._id }, friends: { $ne: req.body._id } },
-    {
-      _id: 1,
-      name: 1,
-      avatarName: 1,
-      avatarImg: 1,
-      role: 1,
-      dateOfBirth: 1,
-      yearOfJoining: 1,
-      address: 1,
-      music: 1,
-      statsData: 1,
-      followers: 1,
-      following: 1, // WILL BE USED LATER IN K NEAREST NEIGHBOUR
-    },
-    { limit: 100 }
-  );
-
-  try {
-    if (!usersNotFriends) {
-      return res.json({ success: false, message: "No user found" });
-    }
-    return res.json({ success: true, usersNotFriends });
-  } catch (err) {
-    res
       .status(500)
       .json({ success: false, message: "server error, try after some time" });
   }
@@ -341,7 +310,6 @@ module.exports = {
   deleteModel,
   // social routes
   getFriendsData,
-  otherUsersData,
   followUser,
   unFollowUser,
 };

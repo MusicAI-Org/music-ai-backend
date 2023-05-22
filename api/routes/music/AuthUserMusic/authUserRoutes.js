@@ -6,7 +6,7 @@
  const userAuthController = require("../../../controllers/index");
  
  // ========================== route to send the music for home page ========================== //
- router.get("/getAuthMusic", (req, res) => {
+ router.get("/getAuthMusic/:id", (req, res) => {
    userAuthController.userController.authMusicController.getAuthMusic(req, res); // route complete
  });
  

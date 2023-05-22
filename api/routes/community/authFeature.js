@@ -13,8 +13,8 @@ router.post("/create", (req, res) => {
   );
 });
 
-router.get("/data", (req, res) => {
-  userAuthController.userController.authCommunityFeatures.fetchAllCommunityData(
+router.get("/data-except-user-comm/:id", (req, res) => {
+  userAuthController.userController.authCommunityFeatures.fetchAllCommunityDataExceptJoined(
     // route complete
     req,
     res
@@ -53,7 +53,7 @@ router.get("/data/:id", (req, res) => {
   );
 });
 
-router.get("/data-user/:_id", (req, res) => {
+router.get("/data-user/:id", (req, res) => {
   userAuthController.userController.authCommunityFeatures.fetchAllCommunitiesOfUser(
     // route complete
     req,

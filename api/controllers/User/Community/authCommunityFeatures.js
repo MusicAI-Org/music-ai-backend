@@ -76,17 +76,23 @@ const createCommunity = async (req, res) => {
 };
 
 // ========================================== fetch all data of the communities ==========================================
-const fetchAllCommunityData = async (req, res) => {
+const fetchAllCommunityDataExceptJoined = async (req, res) => {
+  const { id } = req.params;
   try {
-    const communities = await MusicCommunityModel.find().populate(
-      "name description createdBy members"
-    );
+    const user = await AuthenticatedUserModel.findById(id).populate('communities');
+    const userCommunityIds = user.communities.map((community) => community._id);
+
+    const communities = await MusicCommunityModel.find({
+      _id: { $nin: userCommunityIds },
+    }).populate('name description createdBy members');
+
     return res.status(200).json({ communities });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to fetch community data." });
+    return res.status(500).json({ message: 'Failed to fetch community data.' });
   }
 };
+
 
 // ========================================== join a particular community ==========================================
 const joinCommunity = async (req, res) => {
@@ -244,8 +250,10 @@ const fetchCommunityDataByID = async (req, res) => {
 // ========================================== fetch all the communities of a particular user ==========================================
 const fetchAllCommunitiesOfUser = async (req, res) => {
   try {
-    const { _id } = req.params;
-    const user = await AuthenticatedUserModel.findById({ _id });
+    console.log("hellooooooooooo");
+    const { id } = req.params;
+    console.log(id);
+    const user = await AuthenticatedUserModel.findById({ _id: id });
     const communities = await MusicCommunityModel.find({
       _id: { $in: user.communities },
     }).populate("name description createdBy members");
@@ -258,7 +266,7 @@ const fetchAllCommunitiesOfUser = async (req, res) => {
 
 module.exports = {
   createCommunity,
-  fetchAllCommunityData,
+  fetchAllCommunityDataExceptJoined,
   joinCommunity,
   leaveCommunity,
   deleteCommunity,

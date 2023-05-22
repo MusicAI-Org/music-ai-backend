@@ -35,11 +35,6 @@ router.get("/getfriendsdata/:id", (req, res) => {
   userAuthController.userController.authUserController.getFriendsData(req, res);
 });
 
-// NO USE OF THIS END-POINT
-router.post("/getotherusersdata", (req, res) => {
-  userAuthController.userController.authUserController.otherUsersData(req, res);
-});
-
 // ========================== following and unfollowing routes ========================== //
 router.post("/followuser", (req, res) => {
   userAuthController.userController.authUserController.followUser(req, res);

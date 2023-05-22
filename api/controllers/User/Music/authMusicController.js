@@ -12,59 +12,85 @@ const youtube = google.youtube({
 });
 
 // authenticated end-point
+const cache = new Map(); // Initialize a cache
+
 const getAuthMusic = async (req, res) => {
-  const { _id } = req.body;
+  const { id } = req.params;
 
-  // fetch genre from the id using model and populate the friends
+  // Check if data exists in the cache
+  const cacheKey = `authMusicData_${id}`;
+  const cachedData = cache.get(cacheKey);
+  if (cachedData) {
+    // If data exists in the cache, return it as response
+    console.log("Data retrieved from cache");
+    res.status(200).json(cachedData);
+    return; // Exit the function
+  }
 
-  const user = await AuthenticatedUserModel.findById(_id)
-    .populate("friends")
-    .select("genre friends")
-    .exec();
-
-  let flagCheck = user.friends.length > 0 ? true : false;
-
-  // fetch music from the youtube api based on the genre and send the data to the frontend
   try {
-    // create a list and iterate through the genre array and fetch the data from the corresponding the youtube list
-    // and push the data to the list
-    const musicListBasedOnGenre = [];
-    for (let i = 0; i < user.genre.length; i++) {
-      const topTracks = await youtube.search.list({
-        part: "snippet",
-        type: "video",
-        q: `Top tracks ${user.genre[i]}`,
-        maxResults: 5,
-      });
-      // console.log(topTracks)
-      musicListBasedOnGenre.push(topTracks.data.items);
-    }
+    // Fetch user with genre and friends data from the database in a single query
+    const user = await AuthenticatedUserModel.findById(id)
+      .populate({
+        path: "friends",
+        select: "genre",
+      })
+      .select("genre friends")
+      .exec();
 
-    // ============ create a list and iterate through the genre array and fetch the data from the corresponding the youtube list =======
-    // and push the data to the list
-    const musicListBasedOnFriendsGenre = [];
-    if (flagCheck) {
-      for (let i = 0; i < user.friends.genre.length; i++) {
-        const topTracks = await youtube.search.list({
-          part: "snippet",
-          type: "video",
-          q: `Top tracks ${user.friends.genre[i]}`,
-          maxResults: 5,
-        });
-        musicListBasedOnFriendsGenre.push(topTracks.data.items);
-      }
-    }
+    console.log("frrrrr", user.friends);
 
-    // send the data to the frontend
-    res.status(200).json({
+    const musicListBasedOnGenre = await fetchMusicList(user.genre, 5);
+    const musicListBasedOnFriendsGenre =
+      user.friends.length > 0 ? await fetchFriendsMusicList(user.friends) : [];
+
+    // Create an object with the fetched data
+    const responseData = {
       success: true,
       musicListBasedOnGenre,
       musicListBasedOnFriendsGenre,
-    });
+    };
+
+    // Store the fetched data in the cache
+    cache.set(cacheKey, responseData);
+
+    // Send the data to the frontend
+    res.status(200).json(responseData);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
+};
+
+const fetchMusicList = async (genres, maxResults) => {
+  const musicList = [];
+  const promises = genres.map(async (genre) => {
+    const topTracks = await youtube.search.list({
+      part: "snippet",
+      type: "video",
+      q: `Top tracks ${genre}`,
+      maxResults,
+    });
+    musicList.push(topTracks.data.items);
+  });
+
+  await Promise.all(promises);
+  return musicList;
+};
+
+const fetchFriendsMusicList = async (friends) => {
+  const musicList = [];
+  for (const friend of friends) {
+    for (const genre of friend.genre) {
+      const topTracks = await youtube.search.list({
+        part: "snippet",
+        type: "video",
+        q: `Top tracks ${genre}`,
+        maxResults: 5,
+      });
+      musicList.push(topTracks.data.items);
+    }
+  }
+  return musicList;
 };
 
 // fetch the data for the globe including the friends and not friends users
@@ -72,28 +98,27 @@ const getAuthGlobeData = async (req, res) => {
   console.log("other user data for rendering to the globe");
 
   try {
-    // fetch all users from the database that are not friends
-    // and are not the current user
-    // const usersNotFriends = await AuthenticatedUserModel.find({
-    //   _id: req.body._id,
-    // })
-    //   .select("_id name avatarImg address location")
-    //   .exec();
+    const userId = req.body._id;
+
+    // Fetch users that are not friends and not the current user or their friends
     const usersNotFriends = await AuthenticatedUserModel.find({
-      _id: { $ne: req.body._id },
+      $and: [
+        { _id: { $ne: userId } },
+        { friends: { $nin: userId } },
+        { "friends._id": { $ne: userId } },
+      ],
     })
-      .select("_id name avatarImg address location")
+      .select("_id name avatarName avatarImg address location")
       .exec();
 
-    // users that are friends
+    // Users that are friends
     const usersFriends = await AuthenticatedUserModel.find({
-      _id: { $ne: req.body._id },
-      friends: { $eq: req.body._id },
+      friends: userId,
     })
-      .select("_id name avatarImg address location")
+      .select("_id name avatarName avatarImg address location")
       .exec();
 
-    // send the data to frontend
+    // Send the data to the frontend
     res.status(200).json({
       usersNotFriends,
       usersFriends,
