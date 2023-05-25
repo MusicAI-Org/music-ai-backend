@@ -342,13 +342,30 @@ const fetchMLbasedMusic = async (req, res) => {
 // ========================================== music upload routes ============================================
 const uploadMusic = async (req, res) => {
   const _id = req.body.artist;
+
+  // Check if the user has reached the limit of 10 music files
+  const user = await AuthenticatedUserModel.findById(_id);
+  if (!user) {
+    return res.send("User not found");
+  }
+  if (user.music.length >= 10) {
+    return res.status(400).json({ message: "Maximum limit reached. You cannot create more than 10 music files." });
+  }
+
   try {
     if (!req.file) {
       throw new Error("No music file provided");
     }
+
+    // Check if a music file with the same song name already exists
+    const existingMusic = await MusicAuthenticatedModel.findOne({ songname: req.body.songname.toLowerCase() });
+    if (existingMusic) {
+      return res.status(400).json({ message: "Song name already exists. Please choose a different song name." });
+    }
+
     const newMusic = new MusicAuthenticatedModel({
       _id: mongoose.Types.ObjectId(),
-      songname: req.body.songname,
+      songname: req.body.songname.toLowerCase(),
       artist: _id,
       albumname: req.body.albumname,
       genre: req.body.genre,
@@ -356,49 +373,45 @@ const uploadMusic = async (req, res) => {
       fileSize: req.file.size,
     });
 
-    // fetch the user using id here
-    try {
-      const user = await AuthenticatedUserModel.findById(_id);
-      user.music.push(newMusic._id);
-      await user.save();
+    user.music.push(newMusic._id);
+    await user.save();
 
-      const savedMusic = await newMusic.save();
-      const db = mongoose.connection.db;
-      const bucket = new mongoose.mongo.GridFSBucket(db, {
-        bucketName: "musics",
-      });
-      const readableStream = new Readable();
-      readableStream.push(req.file.buffer);
-      readableStream.push(null);
-      const uploadStream = bucket.openUploadStreamWithId(
-        savedMusic._id,
-        req.file.originalname,
-        {
-          metadata: {
-            songname: req.body.songname,
-            artist: req.body.artist,
-            albumname: req.body.albumname,
-            genre: req.body.genre,
-            format: req.body.format,
-            fileSize: req.file.size,
-          },
-        }
-      );
-      readableStream.pipe(uploadStream);
-      uploadStream.on("error", (err) => {
-        res.status(500).json({ message: "Error uploading music file" });
-      });
-      readableStream.on("close", () => {
-        res.status(201).json({ user, savedMusic });
-      });
-    } catch (err) {
-      console.log(err);
-    }
+    const savedMusic = await newMusic.save();
+    const db = mongoose.connection.db;
+    const bucket = new mongoose.mongo.GridFSBucket(db, {
+      bucketName: "musics",
+    });
+    const readableStream = new Readable();
+    readableStream.push(req.file.buffer);
+    readableStream.push(null);
+    const uploadStream = bucket.openUploadStreamWithId(
+      savedMusic._id,
+      req.file.originalname,
+      {
+        metadata: {
+          songname: req.body.songname,
+          artist: req.body.artist,
+          albumname: req.body.albumname,
+          genre: req.body.genre,
+          format: req.body.format,
+          fileSize: req.file.size,
+        },
+      }
+    );
+    readableStream.pipe(uploadStream);
+    uploadStream.on("error", (err) => {
+      res.status(500).json({ message: "Error uploading music file" });
+    });
+    readableStream.on("close", () => {
+      res.status(201).json({ user, savedMusic });
+    });
   } catch (err) {
-    console.error(err);
+    console.log(err);
     res.status(500).json({ message: "Error uploading music file" });
   }
 };
+
+
 
 const readMusic = async (req, res) => {
   const musicId = req.params.id;
