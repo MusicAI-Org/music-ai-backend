@@ -4,6 +4,7 @@
 // @return: user data
 const mongoose = require("mongoose");
 const MongoClient = require("mongodb").MongoClient;
+const bcrypt = require('bcrypt');
 const AuthenticatedUserModel = require("../../../models/User/Auth/AuthenticatedUser.model.js");
 
 // ===================== create controller ===================== //
@@ -148,7 +149,7 @@ const fetchUser = async (req, res) => {
 };
 
 const editModel = async (req, res) => {
-  // edit the user model
+  // Edit the user model, including changing the password
   const {
     _id,
     name,
@@ -158,28 +159,36 @@ const editModel = async (req, res) => {
     avatarImg,
     phoneNumber,
     address,
+    password,
   } = req.body;
+
   try {
-    // code to edit the model
-    const user = await AuthenticatedUserModel.findByIdAndUpdate(
-      _id,
-      {
-        name,
-        dateOfBirth,
-        avatarName,
-        genre,
-        avatarImg,
-        phoneNumber,
-        address,
-      },
-      { new: true, runValidators: true }
-    );
+    // Code to edit the model
+    const user = await AuthenticatedUserModel.findById(_id);
 
     if (!user) {
       return res.status(404).json({ success: false, error: "No user found" });
     }
 
-    res.json({ success: true, user });
+    // Update the user's details
+    user.name = name;
+    user.dateOfBirth = dateOfBirth;
+    user.avatarName = avatarName;
+    user.genre = genre;
+    user.avatarImg = avatarImg;
+    user.phoneNumber = phoneNumber;
+    user.address = address;
+
+    // Change the password if provided
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+    }
+
+    // Save the updated user
+    const updatedUser = await user.save();
+
+    res.json({ success: true, user: updatedUser });
   } catch (error) {
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((err) => err.message);

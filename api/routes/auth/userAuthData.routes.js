@@ -8,14 +8,14 @@ const userAuthController = require("../../controllers/index");
 // ========================== user routes ========================== //
 // case : create and saving the model in the database and returning the data
 router.post("/createmodel", (req, res) => {
-  userAuthController.userController.authUserController.initializeModel(
+  userAuthController.userController.authUserController.initializeModel( // done
     req,
     res
   );
 });
 
 router.post("/getModel", (req, res) => {
-  userAuthController.userController.authUserController.fetchUser(req, res);
+  userAuthController.userController.authUserController.fetchUser(req, res); // done
 });
 
 router.post("/editmodel", (req, res) => {

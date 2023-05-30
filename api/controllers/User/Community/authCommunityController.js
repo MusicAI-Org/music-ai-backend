@@ -17,7 +17,7 @@ const addFriend = async (req, res) => {
 
     // Check if user1 and user2 are already friends
     if (user1.friends.includes(user2._id)) {
-      res.status(200).json({msg: "Users are already friends"});
+      res.status(200).json({ msg: "Users are already friends" });
       return;
     }
 
@@ -84,15 +84,15 @@ const addFriend = async (req, res) => {
         );
 
         await Promise.all([user1.save(), user2.save()]);
-        res.status(200).json({msg: "Friend added successfully"});
+        res.status(200).json({ msg: "Friend added successfully" });
       } else {
-        res.status(200).json({msg: "Friend request already sent"});
+        res.status(200).json({ msg: "Friend request already sent" });
       }
     } else {
       // Add a new friend request from user1 to user2
       user2.friendRequests.push({ fromUser: user1._id, status: "pending" });
       await user2.save();
-      res.status(200).json({msg: "Friend request sent successfully"});
+      res.status(200).json({ msg: "Friend request sent successfully" });
     }
   } catch (error) {
     console.error(error);
@@ -138,13 +138,16 @@ const fetchSearches = async (req, res) => {
 // nearby fetch
 const nearbyFetch = async (req, res) => {
   // code to fetch nearby users from the database
+  if (!req.body._id) {
+    return res.status(400).json({ msg: "Please provide the user id" });
+  }
+  const MAX_DISTANCE = 300000;
   const {
     _id,
     location: {
       type,
       coordinates: [longitude, latitude],
     },
-    maxDistance = 300000,
   } = req.body;
 
   let nearByUsers = await AuthenticatedUserModel.aggregate([
@@ -155,7 +158,7 @@ const nearbyFetch = async (req, res) => {
           coordinates: [longitude, latitude],
         },
         distanceField: "distance",
-        maxDistance: maxDistance,
+        maxDistance: MAX_DISTANCE,
         spherical: false,
       },
     },
@@ -187,7 +190,7 @@ const likedBased = async (req, res) => {
     "likedMusic"
   );
 
-  console.log(authUser.likedMusic);
+  console.log("hi there",authUser.likedMusic); // music liked by user
 
   try {
     const authUsers = await AuthenticatedUserModel.find({}).exec();
@@ -195,13 +198,15 @@ const likedBased = async (req, res) => {
       const commonLikedMusic = user.likedMusic.filter((musicId) =>
         authUser.likedMusic.includes(musicId)
       );
+      // console.log("commonLikedMusic",commonLikedMusic.length / authUser.likedMusic.length >= threshold)
       return commonLikedMusic.length / authUser.likedMusic.length >= threshold;
     });
-
+    
     // remove the id of the self user from the similarUsers list
     const filteredUsers = similarUsers.filter(
       (user) => user._id.toString() !== _id.toString()
-    );
+      );
+      // console.log("users",similarUsers)
 
     if (!filteredUsers) {
       res.json({ success: false, message: "No user found" });
@@ -349,7 +354,12 @@ const uploadMusic = async (req, res) => {
     return res.send("User not found");
   }
   if (user.music.length >= 10) {
-    return res.status(400).json({ message: "Maximum limit reached. You cannot create more than 10 music files." });
+    return res
+      .status(400)
+      .json({
+        message:
+          "Maximum limit reached. You cannot create more than 10 music files.",
+      });
   }
 
   try {
@@ -358,9 +368,16 @@ const uploadMusic = async (req, res) => {
     }
 
     // Check if a music file with the same song name already exists
-    const existingMusic = await MusicAuthenticatedModel.findOne({ songname: req.body.songname.toLowerCase() });
+    const existingMusic = await MusicAuthenticatedModel.findOne({
+      songname: req.body.songname.toLowerCase(),
+    });
     if (existingMusic) {
-      return res.status(400).json({ message: "Song name already exists. Please choose a different song name." });
+      return res
+        .status(400)
+        .json({
+          message:
+            "Song name already exists. Please choose a different song name.",
+        });
     }
 
     const newMusic = new MusicAuthenticatedModel({
@@ -410,8 +427,6 @@ const uploadMusic = async (req, res) => {
     res.status(500).json({ message: "Error uploading music file" });
   }
 };
-
-
 
 const readMusic = async (req, res) => {
   const musicId = req.params.id;
