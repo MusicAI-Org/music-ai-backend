@@ -10,31 +10,37 @@ const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
 // ========================================== create friends ==========================================
 const addFriend = async (req, res) => {
-  // const { user1Id, user2Id } = req.body;
   try {
     const user1 = await AuthenticatedUserModel.findById(req.body.user1Id);
     const user2 = await AuthenticatedUserModel.findById(req.body.user2Id);
+    // console.log("ididididid",user1._id);
 
-    // Check if user1 and user2 are already friends
-    if (user1.friends.includes(user2._id)) {
-      res.status(200).json({ msg: "Users are already friends" });
-      return;
+    if (user1?.friends != null && user1?.friends?.includes(user2?._id)) {
+      return res.status(200).json({ msg: "Users are already friends" });
     }
 
-    // Check if user1 has already sent a friend request to user2
-    const existingRequestIndex = user1.friendRequests.findIndex((fr) =>
-      fr.fromUser.equals(user2._id)
+    const friendRequestSent = user2?.friendRequests?.some((request) =>
+      request.fromUser.equals(req.body.user1Id)
     );
-    if (existingRequestIndex !== -1) {
-      // If there is an existing friend request, remove it and add user2 to user1's friends list
-      if (user1.friendRequests[existingRequestIndex].status === "pending") {
+
+    if (friendRequestSent) {
+      return res.status(200).json({ msg: "Friend request already sent" });
+    }
+
+    const existingRequestIndex = user1?.friendRequests?.findIndex((fr) =>
+      fr.fromUser.equals(user2?._id)
+    );
+    console.log("eeee",existingRequestIndex)
+
+    if (existingRequestIndex !== undefined && existingRequestIndex !== -1) {
+      if (user1?.friendRequests[existingRequestIndex].status === "pending") {
         user1.friendRequests.splice(existingRequestIndex, 1);
         user1.friends.push(user2._id);
 
-        // Remove any existing friend request from user2 to user1 and update status to accepted
         const existingRequestIndex2 = user2.friendRequests.findIndex((fr) =>
           fr.fromUser.equals(user1._id)
         );
+
         if (existingRequestIndex2 !== -1) {
           if (
             user2.friendRequests[existingRequestIndex2].status === "pending"
@@ -45,18 +51,18 @@ const addFriend = async (req, res) => {
           }
         }
 
-        // Remove any existing friend request from user1 to user2
         const existingRequestIndex3 = user1.friendRequests.findIndex((fr) =>
           fr.fromUser.equals(user2._id)
         );
+
         if (existingRequestIndex3 !== -1) {
           user1.friendRequests.splice(existingRequestIndex3, 1);
         }
 
-        // Add user1 to user2's friend requests
         const existingRequestIndex4 = user2.friendRequests.findIndex((fr) =>
           fr.fromUser.equals(user1._id)
         );
+
         if (existingRequestIndex4 !== -1) {
           if (
             user2.friendRequests[existingRequestIndex4].status === "pending"
@@ -67,15 +73,15 @@ const addFriend = async (req, res) => {
           user2.friendRequests.push({
             fromUser: user1._id,
             status: "accepted",
+            avatarImg: user1.avatarImg,
+            name: user1.name,
           });
         }
 
-        // Add user2 to user1's friends list if they are not already friends
         if (!user2.friends.includes(user1._id)) {
           user2.friends.push(user1._id);
         }
 
-        // remove the request that are already accepted
         user1.friendRequests = user1.friendRequests.filter(
           (fr) => fr.status === "pending"
         );
@@ -89,9 +95,13 @@ const addFriend = async (req, res) => {
         res.status(200).json({ msg: "Friend request already sent" });
       }
     } else {
-      // Add a new friend request from user1 to user2
-      user2.friendRequests.push({ fromUser: user1._id, status: "pending" });
-      await user2.save();
+      user2?.friendRequests?.push({
+        fromUser: user1?._id,
+        status: "pending",
+        avatarImg: user1?.avatarImg,
+        name: user1?.name,
+      });
+      await user2?.save();
       res.status(200).json({ msg: "Friend request sent successfully" });
     }
   } catch (error) {
@@ -190,7 +200,7 @@ const likedBased = async (req, res) => {
     "likedMusic"
   );
 
-  console.log("hi there",authUser.likedMusic); // music liked by user
+  // console.log("hi there",authUser.likedMusic); // music liked by user
 
   try {
     const authUsers = await AuthenticatedUserModel.find({}).exec();
@@ -201,12 +211,12 @@ const likedBased = async (req, res) => {
       // console.log("commonLikedMusic",commonLikedMusic.length / authUser.likedMusic.length >= threshold)
       return commonLikedMusic.length / authUser.likedMusic.length >= threshold;
     });
-    
+
     // remove the id of the self user from the similarUsers list
     const filteredUsers = similarUsers.filter(
       (user) => user._id.toString() !== _id.toString()
-      );
-      // console.log("users",similarUsers)
+    );
+    // console.log("users",similarUsers)
 
     if (!filteredUsers) {
       res.json({ success: false, message: "No user found" });
@@ -354,12 +364,10 @@ const uploadMusic = async (req, res) => {
     return res.send("User not found");
   }
   if (user.music.length >= 10) {
-    return res
-      .status(400)
-      .json({
-        message:
-          "Maximum limit reached. You cannot create more than 10 music files.",
-      });
+    return res.status(400).json({
+      message:
+        "Maximum limit reached. You cannot create more than 10 music files.",
+    });
   }
 
   try {
@@ -372,12 +380,10 @@ const uploadMusic = async (req, res) => {
       songname: req.body.songname.toLowerCase(),
     });
     if (existingMusic) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Song name already exists. Please choose a different song name.",
-        });
+      return res.status(400).json({
+        message:
+          "Song name already exists. Please choose a different song name.",
+      });
     }
 
     const newMusic = new MusicAuthenticatedModel({

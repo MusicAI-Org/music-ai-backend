@@ -75,6 +75,8 @@ const AuthenticatedUserSchema = Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: "AuthenticatedUserModel",
         },
+        avatarImg: String,
+        name: String,
         status: String,
       },
     ],

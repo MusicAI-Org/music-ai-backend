@@ -69,7 +69,6 @@ const initializeModel = async (req, res) => {
 const fetchUser = async (req, res) => {
   const { email } = req.body;
   try {
-    // populate the id with the required data and then send back to the user
     const fullUserPopulatedDetails = await AuthenticatedUserModel.findOne(
       {
         email: email,
@@ -136,17 +135,17 @@ const fetchUser = async (req, res) => {
       })
       .exec();
 
-      // console.log(fullUserPopulatedDetails)
-
     if (!fullUserPopulatedDetails) {
-      res.json({ success: false, err: "No user found" });
+      return res.json({ success: false, err: "No user found" });
     }
-    res.json({ success: true, fullUserPopulatedDetails });
+
+    return res.json({ success: true, fullUserPopulatedDetails });
   } catch (err) {
-    console.log(err.stack);
-    res.json({ success: false, err: "No user found" });
+    console.error(err);
+    return res.json({ success: false, err: "Error fetching user" });
   }
 };
+
 
 const editModel = async (req, res) => {
   // Edit the user model, including changing the password
