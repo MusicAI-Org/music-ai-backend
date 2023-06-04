@@ -11,7 +11,7 @@ const jwtCheck = require("../../middlewares/AuthMiddleware");
 // jwt-pipeline for auth routes
 // jwtcheck here
 router.use("/features", authFeatureRouter);
-router.use("/people", authPeopleRouter); // route complete (fetches the users based on some parameters)
+router.use("/people", authPeopleRouter); // used for frontend (fetches the users based on some parameters)
 router.use("/music", authMusicRouter); // route complete (fetches music of friends, followers, community, genre)
 router.use("/search", authSearchEngine);
 router.use("/stats", authSocialStats);

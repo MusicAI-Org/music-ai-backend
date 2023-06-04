@@ -6,7 +6,7 @@ const communityRouter = require("./community/index");
 const authRouter = require("./auth/userAuthData.routes");
 
 // app routes
-router.use("/auth", authRouter); // route complete
+router.use("/auth", authRouter);
 router.use("/music", musicRouter); // used for frontend
 router.use("/community", communityRouter);
 

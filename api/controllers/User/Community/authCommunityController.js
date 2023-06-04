@@ -294,11 +294,11 @@ const friendsOfFriends = async (req, res) => {
 
 // ========================================== fetch ml music routes ==========================================
 const fetchMLbasedMusic = async (req, res) => {
-  const { _id } = req.body;
+  const { id } = req.params;
 
   try {
     // ==================== code to fetch the music of user's friends with _id ======================= //
-    const user = await AuthenticatedUserModel.findById(_id)
+    const user = await AuthenticatedUserModel.findById(id)
       .populate("friends followers genre")
       .exec();
 
@@ -386,12 +386,14 @@ const uploadMusic = async (req, res) => {
       });
     }
 
+    const genreArray = req.body.genre.split(", ");
+
     const newMusic = new MusicAuthenticatedModel({
       _id: mongoose.Types.ObjectId(),
       songname: req.body.songname.toLowerCase(),
       artist: _id,
       albumname: req.body.albumname,
-      genre: req.body.genre,
+      genre: genreArray,
       format: req.body.format,
       fileSize: req.file.size,
     });
