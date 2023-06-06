@@ -15,6 +15,13 @@ const MusicSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    musicUrl: {
+      type: String,
+    },
+    coverImg:{
+      type: String,
+      required: true
+    },
     genre: [
       {
         type: String,

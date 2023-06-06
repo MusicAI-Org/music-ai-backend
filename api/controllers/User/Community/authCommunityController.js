@@ -4,6 +4,15 @@ const MusicAuthenticatedModel = require("../../../models/Music/Auth/MusicAuthent
 const { Readable } = require("stream");
 const { Configuration, OpenAIApi } = require("openai");
 
+// audio storage configuration
+const firebase = require("firebase/app");
+const {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+} = require("firebase/storage");
+
 // and the user id
 // @params: id
 // @return: user data
@@ -30,7 +39,7 @@ const addFriend = async (req, res) => {
     const existingRequestIndex = user1?.friendRequests?.findIndex((fr) =>
       fr.fromUser.equals(user2?._id)
     );
-    console.log("eeee",existingRequestIndex)
+    console.log("eeee", existingRequestIndex);
 
     if (existingRequestIndex !== undefined && existingRequestIndex !== -1) {
       if (user1?.friendRequests[existingRequestIndex].status === "pending") {
@@ -315,8 +324,9 @@ const fetchMLbasedMusic = async (req, res) => {
 
     // ====================== code to fetch the most liked music from the database =====================//
     const mostLikedMusic = await MusicAuthenticatedModel.find({})
-      .sort({ likes: -1 })
-      .limit(10);
+    .sort({ likes: -1 })
+    .limit(10)
+    .populate("artist", "name")
 
     // fetching music from database based on the genre of the user with similarity percentage >= 50%
 
@@ -355,6 +365,15 @@ const fetchMLbasedMusic = async (req, res) => {
 };
 
 // ========================================== music upload routes ============================================
+const firebaseConfig = {
+  apiKey: "AIzaSyC0zUJWhx0kaPTsAOjGAcSd8XF62Gd6a7c",
+  authDomain: "musicai-371720.firebaseapp.com",
+  projectId: "musicai-371720",
+  storageBucket: "musicai-371720.appspot.com",
+  messagingSenderId: "118780745925",
+  appId: "1:118780745925:web:001cc989a59eba7db738ac",
+};
+firebase.initializeApp(firebaseConfig);
 const uploadMusic = async (req, res) => {
   const _id = req.body.artist;
 
@@ -394,42 +413,60 @@ const uploadMusic = async (req, res) => {
       artist: _id,
       albumname: req.body.albumname,
       genre: genreArray,
+      coverImg: req.body.coverImg,
       format: req.body.format,
       fileSize: req.file.size,
     });
 
     user.music.push(newMusic._id);
     await user.save();
+    await newMusic.save();
 
-    const savedMusic = await newMusic.save();
-    const db = mongoose.connection.db;
-    const bucket = new mongoose.mongo.GridFSBucket(db, {
-      bucketName: "musics",
-    });
-    const readableStream = new Readable();
-    readableStream.push(req.file.buffer);
-    readableStream.push(null);
-    const uploadStream = bucket.openUploadStreamWithId(
-      savedMusic._id,
-      req.file.originalname,
-      {
-        metadata: {
-          songname: req.body.songname,
-          artist: req.body.artist,
-          albumname: req.body.albumname,
-          genre: req.body.genre,
-          format: req.body.format,
-          fileSize: req.file.size,
-        },
+    // firebase confs
+    const storage = getStorage();
+    const storageRef = ref(storage, `musics/${newMusic._id}`);
+    const metadata = {
+      contentType: "audio/mp3",
+    };
+    const uploadTask = uploadBytes(storageRef, req.file.buffer, metadata).then(
+      () => {
+        getDownloadURL(storageRef).then((url) => {
+          newMusic.musicUrl = url;
+          newMusic.save();
+          res.status(201).json({ user, newMusic });
+        });
       }
     );
-    readableStream.pipe(uploadStream);
-    uploadStream.on("error", (err) => {
-      res.status(500).json({ message: "Error uploading music file" });
-    });
-    readableStream.on("close", () => {
-      res.status(201).json({ user, savedMusic });
-    });
+    await uploadTask;
+
+    // const db = mongoose.connection.db;
+    // const bucket = new mongoose.mongo.GridFSBucket(db, {
+    //   bucketName: "musics",
+    // });
+    // const readableStream = new Readable();
+    // readableStream.push(req.file.buffer);
+    // readableStream.push(null);
+    // const uploadStream = bucket.openUploadStreamWithId(
+    //   savedMusic._id,
+    //   req.file.originalname,
+    //   {
+    //     metadata: {
+    //       songname: req.body.songname,
+    //       artist: req.body.artist,
+    //       albumname: req.body.albumname,
+    //       genre: req.body.genre,
+    //       format: req.body.format,
+    //       fileSize: req.file.size,
+    //     },
+    //   }
+    // );
+    // readableStream.pipe(uploadStream);
+    // uploadStream.on("error", (err) => {
+    //   res.status(500).json({ message: "Error uploading music file" });
+    // });
+    // readableStream.on("close", () => {
+    //   res.status(201).json({ user, savedMusic });
+    // });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Error uploading music file" });

@@ -13,6 +13,7 @@
     "build": "rmdir -rf dist && mkdir dist && cp -r src/* dist && cp package.json dist/ && cd dist && yarn install --production && cd .."
   },
   "dependencies": {
+    "@google-cloud/storage": "^6.11.0",
     "auth0": "^3.1.2",
     "axios": "^1.3.2",
     "bcrypt": "^5.1.0",
@@ -25,6 +26,9 @@
     "express-jwt": "^8.4.0",
     "express-openid-connect": "^2.12.0",
     "express-session": "^1.17.3",
+    "firebase": "^9.22.1",
+    "firebase-admin": "^11.9.0",
+    "firebase-functions": "^4.4.0",
     "googleapis": "^111.0.0",
     "gridfs-stream": "^1.1.1",
     "http": "^0.0.1-security",
@@ -33,6 +37,7 @@
     "mongodb": "^5.0.0",
     "mongoose": "^6.9.0",
     "multer": "^1.4.5-lts.1",
+    "multer-firebase-storage": "^4.1.2",
     "multer-gridfs-storage": "^5.0.2",
     "node-cache": "^5.1.2",
     "node-schedule": "^2.1.1",
