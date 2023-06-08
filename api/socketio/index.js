@@ -147,54 +147,84 @@ module.exports = function (io) {
 
     // **************************************************** web - sockets **************************************************** //
     // add comment socket //
-    socket.on("addComment", async function (data) {
-      console.log("addComment", data);
-      const { musicId, userId, comment } = data;
-      await addComment(musicId, userId, comment, io);
-    });
+    // socket.on("addComment", async function (data) {
+    //   console.log("addComment", data);
+    //   const { musicId, userId, comment } = data;
+    //   await addComment(musicId, userId, comment, io);
+    // });
 
     // one to one chatting socket //
-    socket.on("addOneToOneChat", async function (data) {
-      console.log("addOneToOneChat", data);
-      const { fromUser, toUser, message } = data;
-      await addOneToOneChat(fromUser, toUser, message, io);
-    });
+    // socket.on("addOneToOneChat", async function (data) {
+    //   console.log("addOneToOneChat", data);
+    //   const { fromUser, toUser, message } = data;
+    //   await addOneToOneChat(fromUser, toUser, message, io);
+    // });
 
     // group chatting socket
-    socket.on("addGroupChat", async function (data) {
-      console.log("addGroupChat", data);
-      const { groupName, fromUser, message } = data;
-      await addGroupChat(groupName, fromUser, message, io);
-    });
+    // socket.on("addGroupChat", async function (data) {
+    //   console.log("addGroupChat", data);
+    //   const { groupName, fromUser, message } = data;
+    //   await addGroupChat(groupName, fromUser, message, io);
+    // });
 
     // ================================== community sockets ===================================== //
     // create community
-    socket.on("createCommunity", async function (data) {
-      console.log("createCommunity", data);
-      const { groupName, fromUser, message } = data;
-      await addGroupChat(groupName, fromUser, message, io);
-    });
+    // socket.on("createCommunity", async function (data) {
+    //   console.log("createCommunity", data);
+    //   const { groupName, fromUser, message } = data;
+    //   await addGroupChat(groupName, fromUser, message, io);
+    // });
 
     // join community
-    socket.on("joinCommunity", async function (data) {
-      console.log("joinCommunity", data);
-      const { groupName, fromUser, message } = data;
-      await addGroupChat(groupName, fromUser, message, io);
-    });
+    // socket.on("joinCommunity", async function (data) {
+    //   console.log("joinCommunity", data);
+    //   const { groupName, fromUser, message } = data;
+    //   await addGroupChat(groupName, fromUser, message, io);
+    // });
 
     // leave community
-    socket.on("leaveCommunity", async function (data) {
-      console.log("leaveCommunity", data);
-      const { groupName, fromUser, message } = data;
-      await addGroupChat(groupName, fromUser, message, io);
-    });
+    // socket.on("leaveCommunity", async function (data) {
+    //   console.log("leaveCommunity", data);
+    //   const { groupName, fromUser, message } = data;
+    //   await addGroupChat(groupName, fromUser, message, io);
+    // });
 
     // delete community
-    socket.on("deleteCommunity", async function (data) {
-      console.log("deleteCommunity", data);
-      const { groupName, fromUser, message } = data;
-      await addGroupChat(groupName, fromUser, message, io);
+    // socket.on("deleteCommunity", async function (data) {
+    //   console.log("deleteCommunity", data);
+    //   const { groupName, fromUser, message } = data;
+    //   await addGroupChat(groupName, fromUser, message, io);
+    // });
+
+    // **************************************************** check user status **************************************************** //
+    socket.on("userConnected", async (userId) => {
+      console.log("connect", userId);
+      try {
+        // Update the user's online status in the database
+        await AuthenticatedUserModel.findByIdAndUpdate(userId, { online: true });
+  
+        // Emit an event to notify other clients about the user's online status
+        // socket.broadcast.emit("userOnline", userId);
+  
+        // Store the userId in the socket object for later use
+        socket.userId = userId;
+      } catch (error) {
+        console.error(error);
+      }
     });
+    socket.on("disconnect", async () => {
+      console.log("disconnecting", socket.userId);
+      try {
+        // Update the user's online status in the database
+        await AuthenticatedUserModel.findByIdAndUpdate(socket.userId, {
+          online: false,
+        });
+        // Emit an event to notify other clients about the user's online status
+        // socket.broadcast.emit("userOffline", socket.userId);
+      } catch (error) {
+        console.error(error);
+      }
+    });    
   });
 
   return router;

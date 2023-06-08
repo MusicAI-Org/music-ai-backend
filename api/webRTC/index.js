@@ -9,7 +9,7 @@ module.exports = function (io) {
 
   // socket io events
   io.on("connection", async function (socket) {
-    console.log("a user connected");
+    // console.log("a user connected");
 
     // **************************************************** web - RTC **************************************************** //
     // ************************************** start and stop handlers  ************************************* //

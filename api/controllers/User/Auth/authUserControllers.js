@@ -241,6 +241,7 @@ const getFriendsData = async (req, res) => {
         music: 1,
         statsData: 1,
         location: 1,
+        online: 1
       }
     ).lean();
 

@@ -49,6 +49,10 @@ const AuthenticatedUserSchema = Schema(
       type: Date,
       default: Date.now,
     },
+    online: {
+      type: Boolean,
+      default: false,
+    },
     // includes audio and video both
     music: [
       { type: mongoose.Schema.Types.ObjectId, ref: "MusicAuthenticatedModel" },
