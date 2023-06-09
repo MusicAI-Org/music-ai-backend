@@ -36,7 +36,7 @@ app.use("/api", router);
 app.use("/sockets", socketConnections(io));
 app.use("/web-rtc", webrtcConnections(io));
 app.get("/", (req, res) => {
-  res.status(201).json("all okay");
+  res.status(201).json({"health_check":"__WORKING__"});
 });
 
 const PORT = process.env.PORT;
