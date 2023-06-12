@@ -6,7 +6,7 @@ const uploadMusicRouter = require("./uploadMusic");
 
 // jwt-pipeline for auth routes
 // jwtcheck here
-router.use("/fetchMusic", fetchMusicRouter); // route complete
+router.use("/fetchMusic", fetchMusicRouter); // used for frontend
 router.use("/", uploadMusicRouter); // route complete
 
 module.exports = router;

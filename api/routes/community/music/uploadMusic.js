@@ -14,7 +14,7 @@ const userAuthController = require("../../../controllers/index");
 
 // ========================== upload music route ========================== //
 
-router.post("/upload", upload.single("musicFile"), async (req, res) => {
+router.post("/upload", upload.single("musicFile"), async (req, res) => { // used for frontend
   // route complete
   userAuthController.userController.authCommunityController.uploadMusic(
     req,

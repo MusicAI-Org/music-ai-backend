@@ -24,25 +24,7 @@ const createCommunity = async (req, res) => {
 
     // Check if imgUrl exists
     let imageUrl;
-    // if (url) {
     imageUrl = url;
-    // } else {
-    //   const inputValue =
-    //     "an-astronaut-riding-a-horse-on-mars-artstation-hd-dramatic-lighting-detailed";
-    //   const response = await axios.get(
-    //     `https://music-ai-stable-diffusion-api.onrender.com/generate-image/${inputValue}`
-    //   );
-
-    //   image = response.data.image;
-    //   imageUrl = image;
-    //   const result = await cloudinary.uploader.upload(image, {
-    //     public_id: `${user._id}_${name}`,
-    //     width: 500,
-    //     height: 500,
-    //     crop: "fill",
-    //   });
-    //   imageUrl = result.url;
-    // }
 
     // Create new community
     const newCommunity = new MusicCommunityModel({
@@ -180,6 +162,7 @@ const leaveCommunity = async (req, res) => {
 // ========================================== delete a particular community ==========================================
 const deleteCommunity = async (req, res) => {
   try {
+    console.log(req.body);
     const { communityId, user, user_to_transfer_ownership_id } = req.body;
     const authenticatedUserId = user._id;
     const userToTransferOwnershipToId = user_to_transfer_ownership_id;
@@ -196,7 +179,7 @@ const deleteCommunity = async (req, res) => {
     }
 
     // no members in the community and ownership is empty string
-    if (userToTransferOwnershipToId == "" && community.members.length == 0) {
+    if (userToTransferOwnershipToId == "" && community.members.length == 1) {
       // Delete the community directly if there are no members
       await MusicCommunityModel.findByIdAndDelete({ _id: communityId });
       return res

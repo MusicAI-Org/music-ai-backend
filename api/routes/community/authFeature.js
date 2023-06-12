@@ -5,7 +5,7 @@
 const router = require("express").Router();
 const userAuthController = require("../../controllers/index");
 
-router.post("/create", (req, res) => {
+router.post("/create", (req, res) => { // used for frontend
   userAuthController.userController.authCommunityFeatures.createCommunity(
     // route complete
     req,
@@ -13,7 +13,7 @@ router.post("/create", (req, res) => {
   );
 });
 
-router.get("/data-except-user-comm/:id", (req, res) => {
+router.get("/data-except-user-comm/:id", (req, res) => { // used for frontend
   userAuthController.userController.authCommunityFeatures.fetchAllCommunityDataExceptJoined(
     // route complete
     req,
