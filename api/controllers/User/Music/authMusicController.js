@@ -108,14 +108,14 @@ const getAuthGlobeData = async (req, res) => {
         { "friends._id": { $ne: userId } },
       ],
     })
-      .select("_id name avatarName avatarImg address location online")
+      .select("_id name avatarName avatarImg address location online friends")
       .exec();
 
     // Users that are friends
     const usersFriends = await AuthenticatedUserModel.find({
       friends: userId,
     })
-      .select("_id name avatarName avatarImg address location online")
+      .select("_id name avatarName avatarImg address location online friends")
       .exec();
 
     // Send the data to the frontend

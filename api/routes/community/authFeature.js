@@ -21,7 +21,7 @@ router.get("/data-except-user-comm/:id", (req, res) => { // used for frontend
   );
 });
 
-router.post("/join", (req, res) => {
+router.post("/join", (req, res) => { // used for frontend
   userAuthController.userController.authCommunityFeatures.joinCommunity(
     // route complete
     req,
@@ -29,7 +29,7 @@ router.post("/join", (req, res) => {
   );
 });
 
-router.post("/leave", (req, res) => {
+router.post("/leave", (req, res) => { // used for frontend
   userAuthController.userController.authCommunityFeatures.leaveCommunity(
     // route complete
     req,
@@ -37,7 +37,7 @@ router.post("/leave", (req, res) => {
   );
 });
 
-router.post("/delete", (req, res) => {
+router.post("/delete", (req, res) => { // used for frontend
   userAuthController.userController.authCommunityFeatures.deleteCommunity(
     // route complete
     req,
@@ -53,7 +53,7 @@ router.get("/data/:id", (req, res) => {
   );
 });
 
-router.get("/data-user/:id", (req, res) => {
+router.get("/data-user/:id", (req, res) => { // used for frontend
   userAuthController.userController.authCommunityFeatures.fetchAllCommunitiesOfUser(
     // route complete
     req,

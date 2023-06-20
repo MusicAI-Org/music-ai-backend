@@ -61,20 +61,21 @@ const createCommunity = async (req, res) => {
 const fetchAllCommunityDataExceptJoined = async (req, res) => {
   const { id } = req.params;
   try {
-    const user = await AuthenticatedUserModel.findById(id).populate('communities');
+    const user = await AuthenticatedUserModel.findById(id).populate(
+      "communities"
+    );
     const userCommunityIds = user.communities.map((community) => community._id);
 
     const communities = await MusicCommunityModel.find({
       _id: { $nin: userCommunityIds },
-    }).populate('name description createdBy members');
+    }).populate("name description createdBy members createdAt");
 
     return res.status(200).json({ communities });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Failed to fetch community data.' });
+    return res.status(500).json({ message: "Failed to fetch community data." });
   }
 };
-
 
 // ========================================== join a particular community ==========================================
 const joinCommunity = async (req, res) => {
@@ -218,7 +219,11 @@ const fetchCommunityDataByID = async (req, res) => {
   try {
     const { id } = req.params;
     const community = await MusicCommunityModel.findById(id)
-      .populate("members", "-password")
+      .populate({
+        path: "members",
+        select: "-password",
+        populate: "music",
+      })
       .populate("createdBy", "-password");
     if (!community) {
       return res.status(404).json({ message: "Community not found" });
