@@ -4,7 +4,7 @@
 // @return: user data
 const mongoose = require("mongoose");
 const MongoClient = require("mongodb").MongoClient;
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 const AuthenticatedUserModel = require("../../../models/User/Auth/AuthenticatedUser.model.js");
 
 // ===================== create controller ===================== //
@@ -38,6 +38,7 @@ const initializeModel = async (req, res) => {
       role,
       yearOfJoining: new Date().getFullYear(),
       dateOfBirth,
+      joinedAt: new Date(),
       avatarName,
       email,
       password,
@@ -48,7 +49,12 @@ const initializeModel = async (req, res) => {
       creditsForGraphUpdatedAt: Date.now(),
       music: [],
       likedMusic: [],
-      statsData: [],
+      statsData: {
+        likesCount: 0,
+        dislikesCount: 0,
+        viewsCount: 0,
+        rank: "Novice",
+      },
       followers: [],
       following: [],
       friends: [],
@@ -69,7 +75,7 @@ const initializeModel = async (req, res) => {
 const fetchUser = async (req, res) => {
   const { email } = req.body;
   try {
-    const fullUserPopulatedDetails = await AuthenticatedUserModel.findOne(
+    const user = await AuthenticatedUserModel.findOne(
       {
         email: email,
       },
@@ -82,7 +88,9 @@ const fetchUser = async (req, res) => {
         dateOfBirth: 1,
         yearOfJoining: 1,
         genre: 1,
+        isDisabled: 1,
         phoneNumber: 1,
+        address: 1,
         location: 1,
         likes: 1,
         music: 1,
@@ -135,17 +143,16 @@ const fetchUser = async (req, res) => {
       })
       .exec();
 
-    if (!fullUserPopulatedDetails) {
+    if (!user) {
       return res.json({ success: false, err: "No user found" });
     }
 
-    return res.json({ success: true, fullUserPopulatedDetails });
+    return res.json({ success: true, user });
   } catch (err) {
     console.error(err);
     return res.json({ success: false, err: "Error fetching user" });
   }
 };
-
 
 const editModel = async (req, res) => {
   // Edit the user model, including changing the password
@@ -158,8 +165,9 @@ const editModel = async (req, res) => {
     avatarImg,
     phoneNumber,
     address,
-    password,
+    password, // Include password in the destructuring
   } = req.body;
+  console.log(req.body)
 
   try {
     // Code to edit the model
@@ -169,14 +177,28 @@ const editModel = async (req, res) => {
       return res.status(404).json({ success: false, error: "No user found" });
     }
 
-    // Update the user's details
-    user.name = name;
-    user.dateOfBirth = dateOfBirth;
-    user.avatarName = avatarName;
-    user.genre = genre;
-    user.avatarImg = avatarImg;
-    user.phoneNumber = phoneNumber;
-    user.address = address;
+    // Update the user's details if provided
+    if (name) {
+      user.name = name;
+    }
+    if (dateOfBirth) {
+      user.dateOfBirth = dateOfBirth;
+    }
+    if (avatarName) {
+      user.avatarName = avatarName;
+    }
+    if (genre) {
+      user.genre = genre;
+    }
+    if (avatarImg) {
+      user.avatarImg = avatarImg;
+    }
+    if (phoneNumber) {
+      user.phoneNumber = phoneNumber;
+    }
+    if (address) {
+      user.address = address;
+    }
 
     // Change the password if provided
     if (password) {
@@ -218,6 +240,30 @@ const deleteModel = async (req, res) => {
   }
 };
 
+const disableModel = async (req, res) => {
+  const { _id, email } = req.body;
+
+  try {
+    const user = await AuthenticatedUserModel.findOne({
+      _id: _id,
+      email: email,
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    user.isDisabled = !user.isDisabled; // Toggle the value of isDisabled
+
+    const updatedUser = await user.save();
+
+    res.json({ success: true, data: updatedUser });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
+};
+
 // ===================== social controllers =====================
 
 // fetching the users that are followers of the users and also the users to which the user follow
@@ -241,7 +287,7 @@ const getFriendsData = async (req, res) => {
         music: 1,
         statsData: 1,
         location: 1,
-        online: 1
+        online: 1,
       }
     ).lean();
 
@@ -250,6 +296,40 @@ const getFriendsData = async (req, res) => {
     }
 
     return res.json({ success: true, friends });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ success: false, message: "server error, try after some time" });
+  }
+};
+
+// get the data of the user whose id is passed and dont show the password and other important info
+const getRandomData = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const randomUser = await AuthenticatedUserModel.findById(id, {
+      _id: 1,
+      name: 1,
+      avatarName: 1,
+      genre: 1,
+      avatarImg: 1,
+      role: 1,
+      dateOfBirth: 1,
+      yearOfJoining: 1,
+      address: 1,
+      music: 1,
+      statsData: 1,
+    })
+      .populate("music")
+      .lean();
+
+    if (!randomUser) {
+      return res.json({ success: false, message: "No user found" });
+    }
+
+    return res.json({ success: true, randomUser });
   } catch (err) {
     console.log(err);
     return res
@@ -317,8 +397,10 @@ module.exports = {
   fetchUser,
   editModel,
   deleteModel,
+  disableModel,
   // social routes
   getFriendsData,
+  getRandomData,
   followUser,
   unFollowUser,
 };

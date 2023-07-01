@@ -9,6 +9,10 @@ const AuthenticatedUserSchema = Schema(
     },
     role: String, // from noob to advaced based on the points
     yearOfJoining: String,
+    joinedAt: {
+      type: Date,
+      default: Date.now,
+    },
     dateOfBirth: String,
     avatarName: {
       type: String,
@@ -53,6 +57,10 @@ const AuthenticatedUserSchema = Schema(
       type: Boolean,
       default: false,
     },
+    isDisabled: {
+      type: Boolean,
+      default: false,
+    },
     // includes audio and video both
     music: [
       { type: mongoose.Schema.Types.ObjectId, ref: "MusicAuthenticatedModel" },
@@ -61,9 +69,25 @@ const AuthenticatedUserSchema = Schema(
       // this is to count the total number of likes the user has done to the music
       { type: mongoose.Schema.Types.ObjectId, ref: "MusicAuthenticatedModel" },
     ],
-    statsData: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "UserStats.model" },
-    ],
+    statsData: {
+      likesCount: {
+        type: Number,
+        default: 0,
+      },
+      dislikesCount: {
+        type: Number,
+        default: 0,
+      },
+      viewsCount: {
+        type: Number,
+        default: 0,
+      },
+      rank: {
+        type: String,
+        default: "Novice",
+      },
+    },
+
     followers: [
       { type: mongoose.Schema.Types.ObjectId, ref: "AuthenticatedUserModel" },
     ],

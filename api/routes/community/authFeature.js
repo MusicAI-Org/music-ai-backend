@@ -45,7 +45,7 @@ router.post("/delete", (req, res) => { // used for frontend
   );
 });
 
-router.get("/data/:id", (req, res) => {
+router.get("/data/:id", (req, res) => { // used for frontend
   userAuthController.userController.authCommunityFeatures.fetchCommunityDataByID(
     // route complete
     req,

@@ -9,7 +9,7 @@ module.exports = function (MusicSchema) {
       .findById(_id)
       .select("likedMusic");
 
-    let likedMusic = authUser.likedMusic;
+    // let likedMusic = authUser.likedMusic;
 
     // if the user is liking the music
     if (isLike) {
@@ -18,7 +18,7 @@ module.exports = function (MusicSchema) {
         this.likes = this.likes.filter((id) => id != _id);
         this.likesCount--;
         // if already liked the song then it must be in the likedMusic so remove
-        likedMusic = likedMusic.filter((id) => id != music_id);
+        authUser.likedMusic = authUser.likedMusic.filter((id) => id != music_id);
       }
       // if the user has already disliked the music, remove the dislike and add a like
       else if (this.dislikes.includes(_id)) {
@@ -27,14 +27,14 @@ module.exports = function (MusicSchema) {
         this.likes.push(_id);
         this.likesCount++;
         // if already disliked the song then it must be in the likedMusic so add in the likedMusic list
-        likedMusic.push(music_id);
+        authUser.likedMusic.push(music_id);
       }
       // if the user has neither liked nor disliked the music, add a like
       else {
         this.likes.push(_id);
         this.likesCount++;
         // if already disliked the song then it must be in the likedMusic so add in the likedMusic list
-        likedMusic.push(music_id);
+        authUser.likedMusic.push(music_id);
       }
     }
     // if the user is disliking the music
@@ -51,7 +51,7 @@ module.exports = function (MusicSchema) {
         this.dislikes.push(_id);
         this.dislikesCount++;
         // remove from the likedMusic list as well
-        likedMusic = likedMusic.filter((id) => id != music_id);
+        authUser.likedMusic = authUser.likedMusic.filter((id) => id != music_id);
       }
       // if the user has neither liked nor disliked the music, add a dislike
       else {

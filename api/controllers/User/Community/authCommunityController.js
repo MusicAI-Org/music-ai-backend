@@ -11,6 +11,7 @@ const {
   ref,
   uploadBytes,
   getDownloadURL,
+  deleteObject,
 } = require("firebase/storage");
 
 // and the user id
@@ -121,8 +122,67 @@ const addFriend = async (req, res) => {
 
 // ========================================== user stats ==========================================
 const getStatsData = async (req, res) => {
-  // fetch the followers, likes on the music and all this will be added in the statsData
+  try {
+    const { id } = req.params; // Assuming you have the authenticated user's ID
+    const user = await AuthenticatedUserModel.findById(id).populate("music");
+
+    let likesCount = 0;
+    let dislikesCount = 0;
+    let viewsCount = 0;
+
+    // Calculate the total likes, dislikes, and views on the user's music
+    for (const music of user.music) {
+      likesCount += music.likesCount;
+      dislikesCount += music.dislikesCount;
+      viewsCount += music.views;
+    }
+
+    // Determine the rank based on the ratio and total number of users
+    let rank;
+    let totalRatio;
+    if (viewsCount === 0) {
+      const usersWithZeroViews = await AuthenticatedUserModel.find({
+        joinedAt: { $lte: user.joinedAt },
+        viewsCount: 0,
+      }).sort({ joinedAt: 1 });
+      rank = usersWithZeroViews.length; // 1-based rank
+    } else {
+      totalRatio = (likesCount + dislikesCount) / viewsCount;
+      const totalUsers = await AuthenticatedUserModel.countDocuments();
+      rank = Math.ceil(totalRatio * totalUsers);
+    }
+
+    // Determine the role based on the ratio
+    let role;
+    if (viewsCount === 0 || (totalRatio >= 0 && totalRatio < 0.5)) {
+      role = "Novice";
+    } else if (totalRatio >= 0.5 && totalRatio < 1) {
+      role = "Intermediate";
+    } else {
+      role = "Advanced";
+    }
+
+    // Create the statsData object with the rank
+    const statsData = {
+      likesCount,
+      dislikesCount,
+      viewsCount,
+      rank,
+      role,
+    };
+
+    // Update the user's statsData and role
+    user.role = role;
+    user.statsData = statsData;
+    await user.save();
+
+    res.status(200).json(statsData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
+
 // ================================================================= user searches ===========================================================
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_KEY,
@@ -324,9 +384,9 @@ const fetchMLbasedMusic = async (req, res) => {
 
     // ====================== code to fetch the most liked music from the database =====================//
     const mostLikedMusic = await MusicAuthenticatedModel.find({})
-    .sort({ likes: -1 })
-    .limit(10)
-    .populate("artist", "name")
+      .sort({ likes: -1 })
+      .limit(10)
+      .populate("artist", "name");
 
     // fetching music from database based on the genre of the user with similarity percentage >= 50%
 
@@ -438,38 +498,31 @@ const uploadMusic = async (req, res) => {
       }
     );
     await uploadTask;
-
-    // const db = mongoose.connection.db;
-    // const bucket = new mongoose.mongo.GridFSBucket(db, {
-    //   bucketName: "musics",
-    // });
-    // const readableStream = new Readable();
-    // readableStream.push(req.file.buffer);
-    // readableStream.push(null);
-    // const uploadStream = bucket.openUploadStreamWithId(
-    //   savedMusic._id,
-    //   req.file.originalname,
-    //   {
-    //     metadata: {
-    //       songname: req.body.songname,
-    //       artist: req.body.artist,
-    //       albumname: req.body.albumname,
-    //       genre: req.body.genre,
-    //       format: req.body.format,
-    //       fileSize: req.file.size,
-    //     },
-    //   }
-    // );
-    // readableStream.pipe(uploadStream);
-    // uploadStream.on("error", (err) => {
-    //   res.status(500).json({ message: "Error uploading music file" });
-    // });
-    // readableStream.on("close", () => {
-    //   res.status(201).json({ user, savedMusic });
-    // });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Error uploading music file" });
+  }
+};
+
+const readAllMusic = async (req, res) => {
+  const _id = req.params.id;
+  // console.log(req.params.id)
+
+  // _id is the id of user
+  // fetch all the songs of this user
+  let musics;
+  try {
+    musics = await MusicAuthenticatedModel.find({ artist: _id }).populate(
+      "artist",
+      "name"
+    );
+    if (!musics) {
+      res.status(404).json({ message: "No music found" });
+    }
+    res.status(200).json({ musics });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching songs of user" });
   }
 };
 
@@ -508,67 +561,76 @@ const readMusic = async (req, res) => {
 };
 
 const updateMusic = async (req, res) => {
-  // code for updating the music file of that particular user
-  const _id = req.params.id;
-  try {
-    // code to update
-    const updatedMusic = await MusicAuthenticatedModel.findByIdAndUpdate(
-      _id,
-      req.body,
-      { new: true }
-    )
-      .populate("artist")
-      .exec();
-    res.status(200).json({ updatedMusic });
+  const musicId = req.params.id;
 
-    // code to update the music file
-    const db = mongoose.connection.db;
-    const bucket = new mongoose.mongo.GridFSBucket(db, {
-      bucketName: "musics",
-    });
-    const readableStream = new Readable();
-    readableStream.push(req.file.buffer);
-    readableStream.push(null);
-    const uploadStream = bucket.openUploadStreamWithId(
-      _id,
-      req.file.originalname,
-      {
-        metadata: {
-          songname: req.body.songname,
-          artist: req.body.artist,
-          albumname: req.body.albumname,
-          genre: req.body.genre,
-          format: req.body.format,
-          fileSize: req.file.size,
-        },
-      }
-    );
-    readableStream.pipe(uploadStream);
-    uploadStream.on("error", (err) => {
-      res.status(500).json({ message: "Error updating music file" });
-    });
-    readableStream.on("close", () => {
-      res.status(200).json({ updatedMusic });
-    });
+  try {
+    const existingMusic = await MusicAuthenticatedModel.findById(musicId);
+
+    if (!existingMusic) {
+      return res.status(404).json({ message: "Music not found" });
+    }
+
+    // Update music details if the fields are provided in the request body
+    if (req.body.songname) {
+      existingMusic.songname = req.body.songname;
+    }
+    if (req.body.albumname) {
+      existingMusic.albumname = req.body.albumname;
+    }
+    if (req.body.coverImg) {
+      existingMusic.coverImg = req.body.coverImg;
+    }
+    if (req.body.genre) {
+      existingMusic.genre = req.body.genre.split(", ");
+    }
+
+    if (req.file) {
+      // Delete old music file from Firebase
+      const storage = getStorage();
+      const storageRef = ref(storage, `musics/${musicId}`);
+      await deleteObject(storageRef);
+
+      // Upload new music file to Firebase
+      const newStorageRef = ref(storage, `musics/${musicId}`);
+      const metadata = {
+        contentType: "audio/mp3",
+      };
+      await uploadBytes(newStorageRef, req.file.buffer, metadata);
+
+      // Update music URL
+      const url = await getDownloadURL(newStorageRef);
+      existingMusic.musicUrl = url;
+    }
+
+    await existingMusic.save();
+
+    res
+      .status(200)
+      .json({ message: "Music updated successfully", music: existingMusic });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error updating music file" });
+    console.log(err);
+    res.status(500).json({ message: "Error updating music" });
   }
 };
 
 const deleteMusic = async (req, res) => {
-  const _id = req.params.id;
+  const musicId = req.params.id;
+  // console.log("musicId",musicId)
+
   try {
-    const deletedMusic = await MusicAuthenticatedModel.findByIdAndDelete(_id);
-    const db = mongoose.connection.db;
-    const bucket = new mongoose.mongo.GridFSBucket(db, {
-      bucketName: "musics",
-    });
-    await bucket.deleteOne({ _id: new mongoose.Types.ObjectId(_id) });
-    res.status(200).json({ deletedMusic });
+    // Delete music from MongoDB
+    await MusicAuthenticatedModel.findByIdAndDelete(musicId);
+
+    // Delete music file from Firebase
+    const storage = getStorage();
+    const storageRef = ref(storage, `musics/${musicId}`);
+
+    await deleteObject(storageRef);
+
+    res.status(200).json({ message: "Music deleted successfully" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error deleting music file" });
+    console.log(err);
+    res.status(500).json({ message: "Error deleting music" });
   }
 };
 
@@ -610,6 +672,28 @@ const dislikeMusic = async (req, res) => {
   }
 };
 
+const viewsMusic = async (req, res) => {
+  const { music_id } = req.body;
+
+  try {
+    const music = await MusicAuthenticatedModel.findById(music_id);
+
+    if (!music) {
+      return res
+        .status(500)
+        .json({ success: false, message: "No music found" });
+    }
+
+    music.views += 1; // Increment the views count
+    await music.save();
+
+    res.json({ success: true, message: "Incremented successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error incrementing music" });
+  }
+};
+
 module.exports = {
   // add friends route/
   addFriend,
@@ -627,8 +711,10 @@ module.exports = {
   // personal music routes/
   uploadMusic,
   readMusic,
+  readAllMusic,
   updateMusic,
   deleteMusic,
   likeMusic,
   dislikeMusic,
+  viewsMusic,
 };

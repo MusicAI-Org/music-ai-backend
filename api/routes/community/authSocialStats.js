@@ -6,7 +6,7 @@
  const userAuthController = require("../../controllers/index");
  
  // ========================== stats data to fetch all the music related data on frontend ========================== //
- router.get("/", (req, res) => {
+ router.get("/:id", (req, res) => {
    userAuthController.userController.authCommunityController.getStatsData(req, res);
  });
  
