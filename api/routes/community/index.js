@@ -14,6 +14,6 @@ router.use("/features", authFeatureRouter); // used for frontend
 router.use("/people", authPeopleRouter); // used for frontend
 router.use("/music", authMusicRouter); // used for frontend
 router.use("/search", authSearchEngine);
-router.use("/stats", authSocialStats);
+router.use("/stats", authSocialStats); // used for frontend
 
 module.exports = router;

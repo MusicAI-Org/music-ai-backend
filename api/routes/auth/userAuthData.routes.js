@@ -19,7 +19,7 @@ router.post("/getModel", (req, res) => {
 });
 
 router.post("/editmodel", (req, res) => {
-  userAuthController.userController.authUserController.editModel(req, res);
+  userAuthController.userController.authUserController.editModel(req, res); // used for frontend
 });
 
 router.post("/deletemodel", (req, res) => {
@@ -41,11 +41,11 @@ router.get("/getrandomuserdata/:id", (req, res) => {
 
 // ========================== following and unfollowing routes ========================== //
 router.post("/followuser", (req, res) => {
-  userAuthController.userController.authUserController.followUser(req, res);
+  userAuthController.userController.authUserController.followUser(req, res); // used for frontend
 });
 
 router.post("/unfollowuser", (req, res) => {
-  userAuthController.userController.authUserController.unFollowUser(req, res);
+  userAuthController.userController.authUserController.unFollowUser(req, res); // used for frontend
 });
 
 module.exports = router;

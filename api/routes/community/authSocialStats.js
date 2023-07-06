@@ -7,7 +7,7 @@
  
  // ========================== stats data to fetch all the music related data on frontend ========================== //
  router.get("/:id", (req, res) => {
-   userAuthController.userController.authCommunityController.getStatsData(req, res);
+   userAuthController.userController.authCommunityController.getStatsData(req, res); // used for frontend
  });
  
  module.exports = router;

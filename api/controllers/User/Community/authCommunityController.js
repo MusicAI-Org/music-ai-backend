@@ -123,60 +123,86 @@ const addFriend = async (req, res) => {
 // ========================================== user stats ==========================================
 const getStatsData = async (req, res) => {
   try {
-    const { id } = req.params; // Assuming you have the authenticated user's ID
-    const user = await AuthenticatedUserModel.findById(id).populate("music");
+    const { id } = req.params; // Assuming you pass the user ID in the request body
+    const users = await AuthenticatedUserModel.find().populate("music");
 
+    // Calculate the metrics for each user
+    const usersData = await Promise.all(
+      users.map(async (user) => {
+        let likesCount = 0;
+        let dislikesCount = 0;
+        let viewsCount = 0;
+
+        for (const music of user.music) {
+          likesCount += music.likesCount;
+          dislikesCount += music.dislikesCount;
+          viewsCount += music.views;
+        }
+
+        return {
+          userId: user._id,
+          likesCount,
+          dislikesCount,
+          viewsCount,
+        };
+      })
+    );
+
+    // Sort users by viewsCount in descending order
+    const sortedUsers = usersData.sort((a, b) => b.viewsCount - a.viewsCount);
+
+    // Determine the rank of the specified user
+    const targetUserIndex = sortedUsers.findIndex(
+      (user) => user.userId.toString() === id
+    );
+    const rank = targetUserIndex + 1; // 1-based rank
+
+    // Update the ranks in the database for all users
+    await Promise.all(
+      sortedUsers.map(async (user, index) => {
+        const updatedUser = await AuthenticatedUserModel.findById(user.userId);
+        updatedUser.statsData = {
+          likesCount: user.likesCount,
+          dislikesCount: user.dislikesCount,
+          viewsCount: user.viewsCount,
+          rank: index + 1, // 1-based rank
+        };
+        await updatedUser.save();
+      })
+    );
+
+    // ASSINGING ROLES TO USERS ===========================================================
+    const totalUsers = await AuthenticatedUserModel.countDocuments();
+    const targetUser = await AuthenticatedUserModel.findById(id).populate(
+      "music"
+    );
+    console.log(targetUser.music);
     let likesCount = 0;
     let dislikesCount = 0;
     let viewsCount = 0;
 
-    // Calculate the total likes, dislikes, and views on the user's music
-    for (const music of user.music) {
+    for (const music of targetUser.music) {
       likesCount += music.likesCount;
       dislikesCount += music.dislikesCount;
       viewsCount += music.views;
     }
 
-    // Determine the rank based on the ratio and total number of users
-    let rank;
-    let totalRatio;
-    if (viewsCount === 0) {
-      const usersWithZeroViews = await AuthenticatedUserModel.find({
-        joinedAt: { $lte: user.joinedAt },
-        viewsCount: 0,
-      }).sort({ joinedAt: 1 });
-      rank = usersWithZeroViews.length; // 1-based rank
-    } else {
-      totalRatio = (likesCount + dislikesCount) / viewsCount;
-      const totalUsers = await AuthenticatedUserModel.countDocuments();
-      rank = Math.ceil(totalRatio * totalUsers);
-    }
-
-    // Determine the role based on the ratio
-    let role;
-    if (viewsCount === 0 || (totalRatio >= 0 && totalRatio < 0.5)) {
+    const totalRatio = (likesCount + dislikesCount) / viewsCount;
+    let role = "";
+    if (viewsCount == 0 || (totalRatio >= 0 && totalRatio < 0.5)) {
       role = "Novice";
     } else if (totalRatio >= 0.5 && totalRatio < 1) {
       role = "Intermediate";
-    } else {
+    } else if (totalRatio >= 1) {
       role = "Advanced";
     }
+    console.log(viewsCount);
 
-    // Create the statsData object with the rank
-    const statsData = {
-      likesCount,
-      dislikesCount,
-      viewsCount,
-      rank,
-      role,
-    };
+    // Update the target user's role in the database
+    targetUser.role = role;
+    await targetUser.save();
 
-    // Update the user's statsData and role
-    user.role = role;
-    user.statsData = statsData;
-    await user.save();
-
-    res.status(200).json(statsData);
+    res.status(200).json({ rank, role, likesCount, dislikesCount, viewsCount, totalUsers });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });

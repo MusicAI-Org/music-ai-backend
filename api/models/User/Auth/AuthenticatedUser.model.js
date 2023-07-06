@@ -83,8 +83,7 @@ const AuthenticatedUserSchema = Schema(
         default: 0,
       },
       rank: {
-        type: String,
-        default: "Novice",
+        type: Number,
       },
     },
 

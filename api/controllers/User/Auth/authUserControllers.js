@@ -14,7 +14,6 @@ const initializeModel = async (req, res) => {
   const {
     email,
     name,
-    role,
     password,
     dateOfBirth,
     avatarName,
@@ -32,10 +31,14 @@ const initializeModel = async (req, res) => {
       return res.json({ success: false, message: "User already exists" });
     }
 
+    // fetch the total number of users in the database
+    const totalUsers = await AuthenticatedUserModel.countDocuments();
+    // console.log(totalUsers);
+
     const user = new AuthenticatedUserModel({
       _id: mongoose.Types.ObjectId(),
       name,
-      role,
+      role: "Novice",
       yearOfJoining: new Date().getFullYear(),
       dateOfBirth,
       joinedAt: new Date(),
@@ -53,7 +56,7 @@ const initializeModel = async (req, res) => {
         likesCount: 0,
         dislikesCount: 0,
         viewsCount: 0,
-        rank: "Novice",
+        rank: totalUsers + 1,
       },
       followers: [],
       following: [],
@@ -156,6 +159,7 @@ const fetchUser = async (req, res) => {
 
 const editModel = async (req, res) => {
   // Edit the user model, including changing the password
+  console.log("hiihhihihi");
   const {
     _id,
     name,
@@ -167,7 +171,6 @@ const editModel = async (req, res) => {
     address,
     password, // Include password in the destructuring
   } = req.body;
-  console.log(req.body)
 
   try {
     // Code to edit the model
@@ -315,6 +318,8 @@ const getRandomData = async (req, res) => {
       avatarName: 1,
       genre: 1,
       avatarImg: 1,
+      followers: 1,
+      following: 1,
       role: 1,
       dateOfBirth: 1,
       yearOfJoining: 1,
